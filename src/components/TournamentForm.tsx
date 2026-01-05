@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { collection, addDoc, runTransaction, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import { Typography } from "@mui/material";
 
 export default function TournamentForm() {
     const { user } = useAuth();
@@ -49,10 +50,45 @@ export default function TournamentForm() {
         }
     };
 
+    const validate = () => {
+        if (formData.tournamentName.length < 3 || formData.tournamentName.length > 50) {
+            return "Tournament Name must be between 3 and 50 characters.";
+        }
+        if (formData.courseName.length < 3 || formData.courseName.length > 100) {
+            return "Golf Course Name must be between 3 and 100 characters.";
+        }
+        if (formData.location.city.length < 3 || formData.location.city.length > 50) {
+            return "City must be between 3 and 50 characters.";
+        }
+        if (formData.location.street.length < 3 || formData.location.street.length > 50) {
+            return "Street Address must be between 3 and 50 characters.";
+        }
+        if (formData.contactEmail.length < 5 || formData.contactEmail.length > 50) {
+            return "Contact Email must be between 5 and 50 characters.";
+        }
+        if (formData.description.length < 5 || formData.description.length > 1000) {
+            return "Description must be between 5 and 1000 characters.";
+        }
+        if (formData.externalUrl && formData.externalUrl.length > 80) {
+            return "Tournament Website URL must be at most 80 characters.";
+        }
+        if (!["UT", "AZ"].includes(formData.location.state)) {
+            return "Please select a supported state (Utah or Arizona).";
+        }
+        return null;
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
+
+        const validationError = validate();
+        if (validationError) {
+            setError(validationError);
+            setLoading(false);
+            return;
+        }
 
         if (!user) {
             setError("You must be logged in to create a tournament.");
@@ -103,150 +139,159 @@ export default function TournamentForm() {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Create New Tournament</h2>
+        <form onSubmit={handleSubmit} className="mx-auto p-10 bg-white rounded-[32px] shadow-2xl space-y-8 border border-white/20">
+            <h2 className="text-4xl font-bold text-slate-900 mb-8" style={{ fontFamily: 'var(--font-bebas-neue)', letterSpacing: '0.02em' }}>Tournament Information</h2>
 
-
-            <div className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Tournament Name</label>
-                    <input
-                        type="text"
-                        name="tournamentName"
-                        required
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900"
-                        value={formData.tournamentName}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Golf Course Name</label>
-                    <input
-                        type="text"
-                        name="courseName"
-                        required
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900"
-                        value={formData.courseName}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Date</label>
-                    <input
-                        type="date"
-                        name="date"
-                        required
-                        min={today}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900"
-                        value={formData.date}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="sm:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700">Street Address</label>
+            <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1 uppercase letter-spacing-widest">Tournament Name</label>
                         <input
                             type="text"
-                            name="location.street"
+                            name="tournamentName"
                             required
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900"
-                            value={formData.location.street}
+                            placeholder="e.g. Masters Invitation"
+                            className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-lg p-3.5 border text-slate-900 transition-colors"
+                            value={formData.tournamentName}
                             onChange={handleChange}
                         />
                     </div>
+
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">City</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1 uppercase letter-spacing-widest">Golf Course Name</label>
                         <input
                             type="text"
-                            name="location.city"
+                            name="courseName"
                             required
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900"
-                            value={formData.location.city}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">State</label>
-                        <select
-                            name="location.state"
-                            required
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900 bg-white"
-                            value={formData.location.state}
-                            onChange={handleChange as any}
-                        >
-                            <option value="">Select State</option>
-                            <option value="UT">Utah</option>
-                            <option value="AZ">Arizona</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">ZIP / Postal Code</label>
-                        <input
-                            type="text"
-                            name="location.zip"
-                            required
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900"
-                            value={formData.location.zip}
+                            placeholder="e.g. Pebble Beach"
+                            className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-lg p-3.5 border text-slate-900 transition-colors"
+                            value={formData.courseName}
                             onChange={handleChange}
                         />
                     </div>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1 uppercase letter-spacing-widest">Date</label>
+                        <input
+                            type="date"
+                            name="date"
+                            required
+                            min={today}
+                            className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-lg p-3.5 border text-slate-900 transition-colors"
+                            value={formData.date}
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1 uppercase letter-spacing-widest">Contact Email</label>
+                        <input
+                            type="email"
+                            name="contactEmail"
+                            required
+                            placeholder="organizer@example.com"
+                            className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-lg p-3.5 border text-slate-900 transition-colors"
+                            value={formData.contactEmail}
+                            onChange={handleChange}
+                        />
+                    </div>
+                </div>
+
+                <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
+                    <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', mb: 2 }}>Location Details</Typography>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="sm:col-span-2">
+                            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Street Address</label>
+                            <input
+                                type="text"
+                                name="location.street"
+                                required
+                                className="block w-full rounded-lg border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 p-3 border text-slate-900 transition-colors"
+                                value={formData.location.street}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">City</label>
+                            <input
+                                type="text"
+                                name="location.city"
+                                required
+                                className="block w-full rounded-lg border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 p-3 border text-slate-900 transition-colors"
+                                value={formData.location.city}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">State</label>
+                            <select
+                                name="location.state"
+                                required
+                                className="block w-full rounded-lg border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 p-3 border text-slate-900 bg-white transition-colors"
+                                value={formData.location.state}
+                                onChange={handleChange as any}
+                            >
+                                <option value="">Select State</option>
+                                <option value="UT">Utah</option>
+                                <option value="AZ">Arizona</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">ZIP / Postal Code</label>
+                            <input
+                                type="text"
+                                name="location.zip"
+                                required
+                                className="block w-full rounded-lg border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 p-3 border text-slate-900 transition-colors"
+                                value={formData.location.zip}
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </div>
+                </div>
+
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Description</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1 uppercase letter-spacing-widest">Description</label>
                     <textarea
                         name="description"
                         required
                         rows={4}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900"
+                        placeholder="Tell players about the format, prizes, and schedule..."
+                        className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-lg p-3.5 border text-slate-900 transition-colors"
                         value={formData.description}
                         onChange={handleChange}
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Contact Email</label>
-                    <input
-                        type="email"
-                        name="contactEmail"
-                        required
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900"
-                        value={formData.contactEmail}
-                        onChange={handleChange}
-                        placeholder="Email for inquiries"
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">External Website URL (Optional)</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1 uppercase letter-spacing-widest">Tournament Website (Optional)</label>
                     <input
                         type="url"
                         name="externalUrl"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900"
+                        className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-lg p-3.5 border text-slate-900 transition-colors"
                         value={formData.externalUrl}
                         onChange={handleChange}
-                        placeholder="https://example.com"
+                        placeholder="https://your-tournament-site.com"
                     />
                 </div>
-
             </div>
 
             {error && (
-                <div className="bg-red-50 text-red-500 p-4 rounded-md">
+                <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 font-medium">
                     {error}
                 </div>
             )}
 
-            <div className="flex justify-end">
+            <div className="pt-4">
                 <button
                     type="submit"
                     disabled={loading}
-                    className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                    className="w-full inline-flex justify-center py-4 px-6 border border-transparent shadow-xl text-xl font-bold rounded-xl text-white bg-green-800 hover:bg-green-900 focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-all transform hover:-translate-y-1 active:translate-y-0"
+                    style={{ fontFamily: 'var(--font-bebas-neue)', letterSpacing: '0.05em' }}
                 >
-                    {loading ? "Creating..." : "Create Tournament"}
+                    {loading ? "Registering Tournament..." : "Create Tournament Listing"}
                 </button>
             </div>
         </form>
