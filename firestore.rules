@@ -1,42 +1,46 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper to check if a string is within length limits
+    function isValidString(val, min, max) {
+      return val is string && val.size() >= min && val.size() <= max;
+    }
+
+    // Helper to calculate YYYY-MM string from timestamp
+    function getYearMonth() {
+      return string(request.time.year()) + "-" + (request.time.month() < 10 ? "0" : "") + string(request.time.month());
+    }
+
     // Allow public read access to tournaments
     match /tournaments/{tournament} {
       allow read: if true;
-      allow create: if request.auth != null && request.auth.token.email == request.resource.data.hostEmail;
-      allow delete: if request.auth != null && request.auth.token.email == resource.data.hostEmail;
+      allow create: if request.auth != null 
+        && request.auth.uid == request.resource.data.creatorUserId
+        && isValidString(request.resource.data.tournamentName, 3, 100)
+        && isValidString(request.resource.data.courseName, 3, 100)
+        && request.resource.data.location.state in ["UT", "AZ"]
+        && isValidString(request.resource.data.contactEmail, 5, 100)
+        && (request.resource.data.externalUrl == null || isValidString(request.resource.data.externalUrl, 0, 200))
+      // Verify usage counter is updated in this transaction and within limit
+        && getAfter(/databases/$(database)/documents/userUsage/$(request.auth.token.email)/monthlyStats/$(getYearMonth())).data.count <= 5;
+
+      allow delete: if request.auth != null && request.auth.uid == resource.data.creatorUserId;
       // allow update: if false; // TBD 
-
-      match /registrations/{registration} {
-        // Anyone can register
-        allow create: if true 
-          // If joining a team, verify the password against the secret
-          // Use getAfter() to allow verification when the team/secret is created in the same transaction
-          && (
-            request.resource.data.teamId == null || 
-            request.resource.data.teamPassword == getAfter(/databases/$(database)/documents/tournaments/$(tournament)/teams/$(request.resource.data.teamId)/secrets/config).data.password
-          );
-        // Only the tournament host can see registrations
-        allow read: if request.auth != null && request.auth.token.email == get(/databases/$(database)/documents/tournaments/$(tournament)).data.hostEmail;
-      }
-
-      match /teams/{team} {
-        // Anyone can see teams (for selection) and create them
-        allow read, create: if true;
-        // Member count must increment by 1, and password must be verified
-        allow update: if request.resource.data.memberCount == resource.data.memberCount + 1
-          && request.resource.data.joinPassword == getAfter(/databases/$(database)/documents/tournaments/$(tournament)/teams/$(team)/secrets/config).data.password;
-
-        match /secrets/{secret} {
-          // Secrets are never readable
-          allow read: if false;
-          // Anyone can create a secret (during team creation)
-          allow create: if true;
-        }
-      }
     }
-    
+
+    match /userUsage/{email}/monthlyStats/{yyyyMM} {
+      // Users can see their own usage
+      allow read: if request.auth != null && request.auth.token.email == email;
+      // Only the user can update their usage, and only by incrementing by 1 within the limit
+      allow write: if request.auth != null && request.auth.token.email == email
+        && yyyyMM == getYearMonth()
+        && (
+      (resource == null && request.resource.data.count == 1) ||
+      (request.resource.data.count == resource.data.count + 1)
+      )
+        && request.resource.data.count <= 5;
+    }
+
     // Deny access to everything else by default
     match /{document=**} {
       allow read, write: if false;

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, runTransaction, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 
@@ -16,7 +16,7 @@ export default function TournamentForm() {
     const today = new Date().toISOString().split("T")[0];
 
     const [formData, setFormData] = useState({
-        name: "",
+        tournamentName: "",
         courseName: "",
         date: "",
         location: {
@@ -26,8 +26,8 @@ export default function TournamentForm() {
             zip: "",
         },
         description: "",
-        maxPlayersPerTeam: 4,
-        maxTeams: 18,
+        contactEmail: "",
+        externalUrl: "",
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -61,21 +61,42 @@ export default function TournamentForm() {
         }
 
         try {
-            await addDoc(collection(db, "tournaments"), {
-                ...formData,
-                hostEmail: user.email,
-                // Basic lat/long placeholder or we could fetch it. 
-                // Leaving as 0,0 for now as Geocoding wasn't explicitly requested yet but is in the type.
-                location: {
-                    ...formData.location,
-                    latitude: 0,
-                    longitude: 0,
+            const now = new Date();
+            const yearMonth = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+            const statsRef = doc(db, "userUsage", user.email!, "monthlyStats", yearMonth);
+
+            await runTransaction(db, async (transaction) => {
+                const statsSnap = await transaction.get(statsRef);
+                const currentCount = statsSnap.exists() ? statsSnap.data().count : 0;
+
+                if (currentCount >= 5) {
+                    throw new Error("Monthly tournament creation limit (5) reached.");
                 }
+
+                // Increment and update stats
+                transaction.set(statsRef, {
+                    count: currentCount + 1,
+                    lastUpdated: Date.now()
+                }, { merge: true });
+
+                // Create tournament
+                const tournamentsRef = collection(db, "tournaments");
+                const newTournamentRef = doc(tournamentsRef);
+                transaction.set(newTournamentRef, {
+                    ...formData,
+                    creatorUserId: user.uid,
+                    location: {
+                        ...formData.location,
+                        latitude: 0,
+                        longitude: 0,
+                    }
+                });
             });
+
             router.push("/");
-        } catch (err) {
+        } catch (err: any) {
             console.error("Error creating tournament:", err);
-            setError("Failed to create tournament. Please try again.");
+            setError(err.message || "Failed to create tournament. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -85,21 +106,16 @@ export default function TournamentForm() {
         <form onSubmit={handleSubmit} className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md space-y-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Create New Tournament</h2>
 
-            {error && (
-                <div className="bg-red-50 text-red-500 p-4 rounded-md">
-                    {error}
-                </div>
-            )}
 
             <div className="space-y-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Tournament Name</label>
                     <input
                         type="text"
-                        name="name"
+                        name="tournamentName"
                         required
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900"
-                        value={formData.name}
+                        value={formData.tournamentName}
                         onChange={handleChange}
                     />
                 </div>
@@ -154,14 +170,17 @@ export default function TournamentForm() {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">State</label>
-                        <input
-                            type="text"
+                        <select
                             name="location.state"
                             required
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900"
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900 bg-white"
                             value={formData.location.state}
-                            onChange={handleChange}
-                        />
+                            onChange={handleChange as any}
+                        >
+                            <option value="">Select State</option>
+                            <option value="UT">Utah</option>
+                            <option value="AZ">Arizona</option>
+                        </select>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700">ZIP / Postal Code</label>
@@ -188,39 +207,38 @@ export default function TournamentForm() {
                     />
                 </div>
 
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Max Players per Team</label>
-                        <input
-                            type="number"
-                            name="maxPlayersPerTeam"
-                            required
-                            min="1"
-                            max="10"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900"
-                            value={formData.maxPlayersPerTeam}
-                            onChange={(e) => setFormData(prev => ({ ...prev, maxPlayersPerTeam: parseInt(e.target.value) || 4 }))}
-                        />
-                        <p className="mt-1 text-xs text-gray-500">Players allowed per team (e.g. 4).</p>
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Max Teams</label>
-                        <input
-                            type="number"
-                            name="maxTeams"
-                            required
-                            min="1"
-                            max="100"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900"
-                            value={formData.maxTeams}
-                            onChange={(e) => setFormData(prev => ({ ...prev, maxTeams: parseInt(e.target.value) || 18 }))}
-                        />
-                        <p className="mt-1 text-xs text-gray-500">Maximum number of teams in tournament.</p>
-                    </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">Contact Email</label>
+                    <input
+                        type="email"
+                        name="contactEmail"
+                        required
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900"
+                        value={formData.contactEmail}
+                        onChange={handleChange}
+                        placeholder="Email for inquiries"
+                    />
                 </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700">External Website URL (Optional)</label>
+                    <input
+                        type="url"
+                        name="externalUrl"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border text-gray-900"
+                        value={formData.externalUrl}
+                        onChange={handleChange}
+                        placeholder="https://example.com"
+                    />
+                </div>
+
             </div>
+
+            {error && (
+                <div className="bg-red-50 text-red-500 p-4 rounded-md">
+                    {error}
+                </div>
+            )}
 
             <div className="flex justify-end">
                 <button

@@ -2,9 +2,8 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, deleteDoc, collection, query, orderBy, getDocs } from "firebase/firestore";
+import { doc, getDoc, deleteDoc } from "firebase/firestore";
 import { Tournament } from "@/types/tournament";
-import { Registration } from "@/types/registration";
 import Navbar from "@/components/Navbar";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
@@ -13,19 +12,15 @@ import Typography from "@mui/material/Typography";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
+import Grid from "@mui/material/Grid";
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import EmailIcon from '@mui/icons-material/Email';
 import Link from "next/link";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import GroupIcon from '@mui/icons-material/Group';
+import GolfCourseIcon from '@mui/icons-material/GolfCourse';
+
 
 function TournamentViewContent() {
     const { user } = useAuth();
@@ -33,9 +28,7 @@ function TournamentViewContent() {
     const searchParams = useSearchParams();
     const id = searchParams.get("id");
     const [tournament, setTournament] = useState<Tournament | null>(null);
-    const [registrations, setRegistrations] = useState<Registration[]>([]);
     const [loading, setLoading] = useState(true);
-    const [loadingRegistrations, setLoadingRegistrations] = useState(false);
 
     useEffect(() => {
         if (!id) return;
@@ -60,43 +53,6 @@ function TournamentViewContent() {
 
         fetchTournament();
     }, [id]);
-
-    useEffect(() => {
-        const fetchRegistrations = async () => {
-            if (!id || !user || !tournament || user.email !== tournament.hostEmail) return;
-
-            setLoadingRegistrations(true);
-            try {
-                const regsRef = collection(db, "tournaments", id, "registrations");
-                // Note: Multiple orderBys might require a composite index.
-                // We'll try it, and if it fails, we can sort on the client.
-                const q = query(regsRef, orderBy("teamName"), orderBy("createdAt", "desc"));
-                const querySnapshot = await getDocs(q);
-                const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Registration));
-                setRegistrations(data);
-            } catch (e) {
-                console.error("Error fetching registrations:", e);
-                // If it fails due to index, try a simpler query and sort on client
-                try {
-                    const simpleQuery = query(collection(db, "tournaments", id, "registrations"));
-                    const snap = await getDocs(simpleQuery);
-                    const rawData = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Registration));
-                    const sortedData = [...rawData].sort((a, b) => {
-                        const teamCompare = (a.teamName || "").localeCompare(b.teamName || "");
-                        if (teamCompare !== 0) return teamCompare;
-                        return b.createdAt - a.createdAt;
-                    });
-                    setRegistrations(sortedData);
-                } catch (err) {
-                    console.error("Final fallback error:", err);
-                }
-            } finally {
-                setLoadingRegistrations(false);
-            }
-        };
-
-        fetchRegistrations();
-    }, [id, user, tournament]);
 
     const handleDelete = async () => {
         if (!id) return;
@@ -136,154 +92,239 @@ function TournamentViewContent() {
         );
     }
 
+    const isHost = user && tournament && user.uid === tournament.creatorUserId;
+
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="min-h-screen bg-[#f8fafc]">
             <Navbar />
-            <Container maxWidth="lg" sx={{ py: 4 }}>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                    <Button component={Link} href="/" startIcon={<ArrowBackIcon />}>
-                        Back to List
+
+            {/* Hero Section */}
+            <Box sx={{
+                width: '100%',
+                background: 'linear-gradient(135deg, #2c9553ff 0%, #0b2f19ff 100%)',
+                pt: { xs: 8, md: 12 },
+                pb: { xs: 10, md: 16 },
+                color: 'white',
+                position: 'relative',
+                mb: -6
+            }}>
+                <Container maxWidth="lg">
+                    <Button
+                        component={Link}
+                        href="/"
+                        startIcon={<ArrowBackIcon />}
+                        sx={{
+                            color: 'rgba(255, 255, 255, 0.8)',
+                            mb: 4,
+                            '&:hover': { color: 'white', bgcolor: 'rgba(255, 255, 255, 0.1)' }
+                        }}
+                    >
+                        Back to Tournaments
                     </Button>
-                    {user && tournament && user.email === tournament.hostEmail && (
-                        <Button
-                            variant="outlined"
-                            color="error"
-                            startIcon={<DeleteIcon />}
-                            onClick={handleDelete}
+
+                    <Typography
+                        variant="h1"
+                        sx={{
+                            fontFamily: 'var(--font-bebas-neue)',
+                            fontSize: { xs: '3.5rem', md: '6rem' },
+                            lineHeight: 0.9,
+                            mb: 2,
+                            textShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                        }}
+                    >
+                        {tournament.tournamentName}
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, alignItems: 'center' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <CalendarMonthIcon sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                            <Typography sx={{ fontSize: '1.2rem', fontWeight: 500 }}>
+                                {tournament.date}
+                            </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <LocationOnIcon sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                            <Typography sx={{ fontSize: '1.2rem', fontWeight: 500 }}>
+                                {tournament.location.city}, {tournament.location.state}
+                            </Typography>
+                        </Box>
+                        {isHost && (
+                            <Button
+                                variant="outlined"
+                                color="inherit"
+                                startIcon={<DeleteIcon />}
+                                onClick={handleDelete}
+                                sx={{
+                                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                                    '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)', borderColor: '#ef4444' }
+                                }}
+                            >
+                                Delete
+                            </Button>
+                        )}
+                    </Box>
+                </Container>
+            </Box>
+
+            <Container maxWidth="lg" sx={{ pb: 10, position: 'relative', zIndex: 1 }}>
+                <Grid container spacing={4}>
+                    {/* Main Content */}
+                    <Grid size={{ xs: 12, md: 8 }}>
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: { xs: 4, md: 6 },
+                                borderRadius: '24px',
+                                border: '1px solid #e2e8f0',
+                                boxShadow: '0 4px 20px -5px rgba(0,0,0,0.05)'
+                            }}
                         >
-                            Delete Tournament
-                        </Button>
-                    )}
-                </Box>
-
-                <Paper elevation={0} className="overflow-hidden bg-white border border-slate-200 rounded-lg">
-
-                    <div className="p-6 md:p-8">
-                        <Typography variant="h3" component="h1" className="font-bold text-slate-900 mb-4">
-                            {tournament.name}
-                        </Typography>
-
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-                            <div className="md:col-span-8">
-                                <Typography variant="h6" className="font-semibold text-slate-800 mb-2">
-                                    About this Event
+                            <Box sx={{ mb: 6 }}>
+                                <Typography
+                                    variant="h4"
+                                    sx={{
+                                        fontFamily: 'var(--font-bebas-neue)',
+                                        color: '#1e293b',
+                                        mb: 3,
+                                        letterSpacing: '0.02em'
+                                    }}
+                                >
+                                    Course & Location
                                 </Typography>
-                                <Typography variant="body1" className="text-slate-600 whitespace-pre-wrap mb-6">
+
+                                <Box sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 3,
+                                    p: 3,
+                                    bgcolor: '#f8fafc',
+                                    borderRadius: '16px',
+                                    border: '1px solid #f1f5f9',
+                                    mb: 4
+                                }}>
+                                    <Box sx={{
+                                        bgcolor: '#15803d',
+                                        p: 2,
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        color: 'white'
+                                    }}>
+                                        <GolfCourseIcon fontSize="large" />
+                                    </Box>
+                                    <Box>
+                                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#0f172a' }}>
+                                            {tournament.courseName}
+                                        </Typography>
+                                        <Typography variant="body1" color="text.secondary">
+                                            {tournament.location.street}, {tournament.location.city}, {tournament.location.state} {tournament.location.zip}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+
+                                <Typography
+                                    variant="h4"
+                                    sx={{
+                                        fontFamily: 'var(--font-bebas-neue)',
+                                        color: '#1e293b',
+                                        mb: 3,
+                                        letterSpacing: '0.02em'
+                                    }}
+                                >
+                                    Tournament Description
+                                </Typography>
+                                <Typography
+                                    variant="body1"
+                                    sx={{
+                                        color: '#475569',
+                                        lineHeight: 1.8,
+                                        fontSize: '1.1rem',
+                                        whiteSpace: 'pre-wrap'
+                                    }}
+                                >
                                     {tournament.description}
                                 </Typography>
+                            </Box>
+                        </Paper>
+                    </Grid>
 
-                                <Typography variant="h6" className="font-semibold text-slate-800 mb-2">
-                                    Location
+                    {/* Sidebar */}
+                    <Grid size={{ xs: 12, md: 4 }}>
+                        <Box sx={{ position: 'sticky', top: 24 }}>
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    p: 4,
+                                    borderRadius: '24px',
+                                    bgcolor: '#1e293b',
+                                    color: 'white',
+                                    mb: 4,
+                                    border: '1px solid #334155'
+                                }}
+                            >
+                                <Typography
+                                    variant="h5"
+                                    sx={{
+                                        fontFamily: 'var(--font-bebas-neue)',
+                                        mb: 4,
+                                        letterSpacing: '0.05em'
+                                    }}
+                                >
+                                    Contact & Links
                                 </Typography>
-                                <Box className="flex items-start gap-2 text-slate-600 mb-4">
-                                    <LocationOnIcon color="action" />
-                                    <div>
-                                        <Typography variant="body1">{tournament.location.street}</Typography>
-                                        <Typography variant="body1">
-                                            {tournament.location.city}, {tournament.location.state} {tournament.location.zip}
-                                        </Typography>
-                                    </div>
-                                </Box>
-                            </div>
 
-                            <div className="md:col-span-4">
-                                <Paper variant="outlined" className="p-4 bg-slate-50">
-                                    <Typography variant="h6" className="font-semibold text-slate-800 mb-4">
-                                        Event Details
-                                    </Typography>
-
-                                    <div className="flex items-center gap-3 mb-3 text-slate-700">
-                                        <CalendarMonthIcon fontSize="small" />
-                                        <Typography>{tournament.date}</Typography>
-                                    </div>
-
-                                    <div className="flex items-center gap-3 mb-3 text-slate-700">
-                                        <EmailIcon fontSize="small" />
-                                        <Typography component="a" href={`mailto:${tournament.hostEmail}`} className="hover:underline hover:text-green-700">
-                                            Contact Host
-                                        </Typography>
-                                    </div>
-
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        fullWidth
-                                        component={Link}
-                                        href={`/tournaments/register?tournamentId=${id}`}
-                                        sx={{ mt: 2, bgcolor: '#15803d', '&:hover': { bgcolor: '#166534' } }}
-                                    >
-                                        Register
-                                    </Button>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Box sx={{ bgcolor: 'rgba(255, 255, 255, 0.1)', p: 1, borderRadius: '8px' }}>
+                                            <EmailIcon sx={{ color: '#10b981' }} />
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                                                Inquiries
+                                            </Typography>
+                                            <Typography sx={{ fontWeight: 600 }}>{tournament.contactEmail}</Typography>
+                                        </Box>
+                                    </Box>
 
                                     {tournament.externalUrl && (
                                         <Button
-                                            variant="outlined"
-                                            color="success"
+                                            variant="contained"
                                             fullWidth
                                             href={tournament.externalUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            sx={{ mt: 1 }}
+                                            sx={{
+                                                bgcolor: '#10b981',
+                                                py: 2,
+                                                borderRadius: '12px',
+                                                fontFamily: 'var(--font-bebas-neue)',
+                                                fontSize: '1.2rem',
+                                                letterSpacing: '0.05em',
+                                                '&:hover': { bgcolor: '#059669' }
+                                            }}
                                         >
-                                            Tournament Website
+                                            Visit Tournament Website
                                         </Button>
                                     )}
-                                </Paper>
-                            </div>
-                        </div>
-                    </div>
-                </Paper>
 
-                {user && tournament && user.email === tournament.hostEmail && (
-                    <Box sx={{ mt: 6 }}>
-                        <Box display="flex" alignItems="center" gap={1} mb={2}>
-                            <GroupIcon color="primary" />
-                            <Typography variant="h5" className="font-bold text-slate-800">
-                                Registered Participants
-                            </Typography>
+                                    <Button
+                                        variant="outlined"
+                                        fullWidth
+                                        href={`mailto:${tournament.contactEmail}`}
+                                        sx={{
+                                            color: 'white',
+                                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                                            py: 1.5,
+                                            borderRadius: '12px',
+                                            '&:hover': { borderColor: 'white', bgcolor: 'rgba(255, 255, 255, 0.05)' }
+                                        }}
+                                    >
+                                        Email Organizer
+                                    </Button>
+                                </Box>
+                            </Paper>
                         </Box>
-
-                        <TableContainer component={Paper} elevation={0} variant="outlined">
-                            <Table sx={{ minWidth: 650 }}>
-                                <TableHead sx={{ bgcolor: 'slate.50' }}>
-                                    <TableRow>
-                                        <TableCell className="font-bold">Team Name</TableCell>
-                                        <TableCell className="font-bold">Name</TableCell>
-                                        <TableCell className="font-bold">Email</TableCell>
-                                        <TableCell className="font-bold" align="right">Registered Date</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {registrations.length === 0 ? (
-                                        <TableRow>
-                                            <TableCell colSpan={4} align="center" sx={{ py: 4 }}>
-                                                {loadingRegistrations ? "Loading participants..." : "No participants registered yet."}
-                                            </TableCell>
-                                        </TableRow>
-                                    ) : (
-                                        registrations.map((reg) => (
-                                            <TableRow
-                                                key={reg.id}
-                                                sx={{ '&:nth-of-type(odd)': { bgcolor: 'action.hover' } }}
-                                            >
-                                                <TableCell component="th" scope="row">
-                                                    <Box sx={{ fontWeight: 'bold', color: 'primary.main' }}>
-                                                        {reg.teamName}
-                                                    </Box>
-                                                </TableCell>
-                                                <TableCell>{reg.name}</TableCell>
-                                                <TableCell>{reg.email}</TableCell>
-                                                <TableCell align="right">
-                                                    {new Date(reg.createdAt).toLocaleDateString()}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    </Box>
-                )}
+                    </Grid>
+                </Grid>
             </Container>
         </div>
     );

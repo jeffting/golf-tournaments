@@ -6,6 +6,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import SportsGolfIcon from '@mui/icons-material/SportsGolf';
+import AddIcon from '@mui/icons-material/Add';
 import { useAuth } from "@/context/AuthContext";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -78,7 +79,19 @@ export default function Navbar() {
                         TRACKER
                     </Typography>
 
-                    {/* Create Tournament Button - Visible on larger screens */}
+                    {/* Create Tournament Button - Visible on all screens */}
+                    <Box sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }}>
+                        <Button
+                            size="large"
+                            aria-label="create tournament"
+                            color="inherit"
+                            component={Link}
+                            href="/tournaments/new"
+                        >
+                            Create
+                        </Button>
+                    </Box>
+
                     <Button
                         color="inherit"
                         component={Link}
