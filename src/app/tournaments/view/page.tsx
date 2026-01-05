@@ -315,7 +315,8 @@ function TournamentViewContent() {
                                             borderColor: 'rgba(255, 255, 255, 0.2)',
                                             py: 1.5,
                                             borderRadius: '12px',
-                                            '&:hover': { borderColor: 'white', bgcolor: 'rgba(255, 255, 255, 0.05)' }
+                                            '&:hover': { borderColor: 'white', bgcolor: 'rgba(255, 255, 255, 0.05)' },
+                                            display: { xs: 'flex', md: 'none' }
                                         }}
                                     >
                                         Email Organizer
