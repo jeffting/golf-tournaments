@@ -145,7 +145,7 @@ export default function Home() {
 
       {/* Full-Width Hero Section */}
       <Box sx={{
-        background: 'linear-gradient(to bottom, #14532d 0%, #157347 50%, #8bb500ff 100%)',
+        background: 'linear-gradient(to bottom, #14532d 0%, #002478ff 50%, #00580aff 100%)',
         pt: { xs: 8, md: 10 },
         pb: { xs: 8, md: 10 },
         textAlign: 'center',
@@ -165,7 +165,7 @@ export default function Home() {
               letterSpacing: '0.02em'
             }}
           >
-            Connecting you with local golf tournaments in your community
+            List local golf tournaments.<br />Find local golf tournaments.
           </Typography>
           <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, flexWrap: 'wrap' }}>
             <Box
