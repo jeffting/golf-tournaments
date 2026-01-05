@@ -4,7 +4,9 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import TournamentForm from "@/components/TournamentForm";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Button } from "@mui/material";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import Link from "next/link";
 
 export default function CreateTournamentPage() {
     const { user, loading } = useAuth();
@@ -31,6 +33,21 @@ export default function CreateTournamentPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-emerald-700 via-green-900 to-slate-950 py-12 px-4 shadow-inner">
             <div className="max-w-4xl mx-auto">
+                <Button
+                    component={Link}
+                    href="/"
+                    startIcon={<ArrowBackIcon />}
+                    sx={{
+                        color: 'rgba(255, 255, 255, 0.8)',
+                        mb: 4,
+                        fontFamily: 'var(--font-bebas-neue)',
+                        fontSize: '1.1rem',
+                        letterSpacing: '0.05em',
+                        '&:hover': { color: 'white', bgcolor: 'rgba(255, 255, 255, 0.1)' }
+                    }}
+                >
+                    Back to Tournaments
+                </Button>
                 <Box sx={{ mb: 6, textAlign: 'center' }}>
                     <Typography
                         variant="h2"

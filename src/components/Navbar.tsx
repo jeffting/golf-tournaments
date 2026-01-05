@@ -36,7 +36,7 @@ export default function Navbar() {
     };
 
     return (
-        <AppBar position="static" className="bg-green-900 border-b border-green-800" elevation={0} sx={{ bgcolor: '#14532d' }}>
+        <AppBar position="static" className="bg-green-900" elevation={0} sx={{ bgcolor: '#14532d' }}>
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
                     <SportsGolfIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1, color: "white" }} />

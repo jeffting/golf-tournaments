@@ -121,6 +121,7 @@ function TournamentViewContent() {
                         href="/"
                         startIcon={<ArrowBackIcon />}
                         sx={{
+                            fontSize: '1.1rem',
                             color: 'rgba(255, 255, 255, 0.8)',
                             mb: 4,
                             '&:hover': { color: 'white', bgcolor: 'rgba(255, 255, 255, 0.1)' }
