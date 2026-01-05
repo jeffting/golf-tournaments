@@ -230,7 +230,7 @@ function TournamentViewContent() {
                                         letterSpacing: '0.02em'
                                     }}
                                 >
-                                    Tournament Description
+                                    Description
                                 </Typography>
                                 <Typography
                                     variant="body1"
