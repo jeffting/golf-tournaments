@@ -19,12 +19,22 @@ export default function SignUp() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [displayName, setDisplayName] = useState("");
+    const [username, setUsername] = useState(""); // Honeypot field
     const [error, setError] = useState("");
     const router = useRouter();
 
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
+
+        // Honeypot check: If the hidden 'username' field is filled, it's likely a bot.
+        if (username) {
+            console.warn("Honeypot field filled. Bot detected.");
+            // We return early without showing a specific error to the bot, 
+            // but for UX we might want to redirect to a fake success or just stay silent.
+            // For now, we'll just stop the process.
+            return;
+        }
 
         try {
             // 1. Create user in Auth
@@ -96,6 +106,19 @@ export default function SignUp() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
+
+                        {/* Honeypot field - hidden from users but attractive to bots */}
+                        <div style={{ display: 'none' }} aria-hidden="true">
+                            <TextField
+                                name="username"
+                                label="Username"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                autoComplete="off"
+                                tabIndex={-1}
+                            />
+                        </div>
+
                         <Button
                             type="submit"
                             fullWidth
