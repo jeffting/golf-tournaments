@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeRegistry } from "@/components/ThemeRegistry";
+import FirebaseAppCheck from "@/components/FirebaseAppCheck";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,7 +37,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${bebasNeue.variable} antialiased`}
       >
         <ThemeRegistry>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <FirebaseAppCheck />
+            {children}
+          </AuthProvider>
         </ThemeRegistry>
       </body>
     </html>

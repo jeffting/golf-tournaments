@@ -6,6 +6,11 @@ service cloud.firestore {
       return val is string && val.size() >= min && val.size() <= max;
     }
 
+    // Helper to check if the request is coming from a verified app (App Check)
+    function isAppVerified() {
+      return request.appCheck != null;
+    }
+
     // Helper to calculate YYYY-MM string from timestamp
     function getYearMonth() {
       return string(request.time.year()) + "-" + (request.time.month() < 10 ? "0" : "") + string(request.time.month());
@@ -24,11 +29,20 @@ service cloud.firestore {
         && isValidString(request.resource.data.contactEmail, 5, 50)
         && isValidString(request.resource.data.description, 5, 1000)
         && (request.resource.data.externalUrl == null || isValidString(request.resource.data.externalUrl, 0, 80))
+      // Require App Check for tournament creation
+        && isAppVerified()
       // Verify usage counter is updated in this transaction and within limit
         && getAfter(/databases/$(database)/documents/userUsage/$(request.auth.token.email)/monthlyStats/$(getYearMonth())).data.count <= 5;
 
       allow delete: if request.auth != null && request.auth.uid == resource.data.creatorUserId;
-      // allow update: if false; // TBD 
+    }
+
+    // Users can only read and write their own data
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId
+      // Require App Check for user profile creation/updates
+        && isAppVerified();
     }
 
     match /userUsage/{email}/monthlyStats/{yyyyMM} {
