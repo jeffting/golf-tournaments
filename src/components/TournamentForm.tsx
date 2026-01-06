@@ -104,8 +104,9 @@ export default function TournamentForm() {
             await runTransaction(db, async (transaction) => {
                 const statsSnap = await transaction.get(statsRef);
                 const currentCount = statsSnap.exists() ? statsSnap.data().count : 0;
+                const isAdmin = user.email === "jefftingey22@gmail.com";
 
-                if (currentCount >= 5) {
+                if (currentCount >= 5 && !isAdmin) {
                     throw new Error("Monthly tournament creation limit (5) reached.");
                 }
 

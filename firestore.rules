@@ -8,12 +8,17 @@ service cloud.firestore {
 
     // Helper to check if the request is coming from a verified app (App Check)
     function isAppVerified() {
-      return request.appCheck != null;
+      return request.appCheck != null || isAdmin();
     }
 
     // Helper to calculate YYYY-MM string from timestamp
     function getYearMonth() {
       return string(request.time.year()) + "-" + (request.time.month() < 10 ? "0" : "") + string(request.time.month());
+    }
+
+    // Helper to check if the user is an admin
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == "jefftingey22@gmail.com";
     }
 
     // Allow public read access to tournaments
@@ -31,8 +36,8 @@ service cloud.firestore {
         && (request.resource.data.externalUrl == null || isValidString(request.resource.data.externalUrl, 0, 80))
       // Require App Check for tournament creation
         && isAppVerified()
-      // Verify usage counter is updated in this transaction and within limit
-        && getAfter(/databases/$(database)/documents/userUsage/$(request.auth.token.email)/monthlyStats/$(getYearMonth())).data.count <= 5;
+      // Verify usage counter is updated in this transaction and within limit (admins exempt)
+        && (isAdmin() || getAfter(/databases/$(database)/documents/userUsage/$(request.auth.token.email)/monthlyStats/$(getYearMonth())).data.count <= 5);
 
       allow delete: if request.auth != null && request.auth.uid == resource.data.creatorUserId;
     }
@@ -48,14 +53,14 @@ service cloud.firestore {
     match /userUsage/{email}/monthlyStats/{yyyyMM} {
       // Users can see their own usage
       allow read: if request.auth != null && request.auth.token.email == email;
-      // Only the user can update their usage, and only by incrementing by 1 within the limit
+      // Only the user can update their usage, and only by incrementing by 1 within the limit (admins exempt)
       allow write: if request.auth != null && request.auth.token.email == email
         && yyyyMM == getYearMonth()
         && (
       (resource == null && request.resource.data.count == 1) ||
       (request.resource.data.count == resource.data.count + 1)
       )
-        && request.resource.data.count <= 5;
+        && (isAdmin() || request.resource.data.count <= 5);
     }
 
     // Deny access to everything else by default

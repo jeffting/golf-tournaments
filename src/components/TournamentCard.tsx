@@ -37,7 +37,7 @@ export default function TournamentCard({ tournament }: Props) {
                         <CalendarMonthIcon sx={{ fontSize: '1rem' }} />
                         <Typography
                             sx={{
-                                fontSize: '1.1rem',
+                                fontSize: '1.3rem',
                                 fontFamily: 'var(--font-bebas-neue)',
                                 letterSpacing: '0.05em'
                             }}
@@ -45,14 +45,27 @@ export default function TournamentCard({ tournament }: Props) {
                             {formatDate(tournament.date)}
                         </Typography>
                     </Box>
-                    <Typography
-                        variant="h6"
-                        component="div"
-                        className="font-bold text-white text-center"
-                        sx={{ fontFamily: 'var(--font-bebas-neue)', fontSize: '2rem', letterSpacing: '0.05em', mt: 1.5 }}
-                    >
-                        {tournament.tournamentName}
-                    </Typography>
+                    <Box sx={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 1.5 }}>
+                        <Typography
+                            variant="h6"
+                            component="div"
+                            className="font-bold text-white text-center"
+                            sx={{
+                                fontFamily: 'var(--font-bebas-neue)',
+                                fontSize: tournament.tournamentName.length > 25 ? '1.4rem' :
+                                    tournament.tournamentName.length > 15 ? '1.7rem' : '2.1rem',
+                                letterSpacing: '0.05em',
+                                lineHeight: 1.1,
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                width: '100%'
+                            }}
+                        >
+                            {tournament.tournamentName}
+                        </Typography>
+                    </Box>
                 </Box>
 
                 <CardContent className="w-full flex-grow">
