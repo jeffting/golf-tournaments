@@ -356,7 +356,7 @@ export default function Home() {
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 2.5 }}>
+                  <Grid size={{ xs: 12, sm: 6, md: 2 }}>
                     <TextField
                       fullWidth
                       size="small"
@@ -368,7 +368,7 @@ export default function Home() {
                       sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                     />
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 2.5 }}>
+                  <Grid size={{ xs: 12, sm: 6, md: 2 }}>
                     <TextField
                       fullWidth
                       size="small"
@@ -380,15 +380,20 @@ export default function Home() {
                       sx={{ '& .MuiOutlinedInput-root': { borderRadius: '8px' } }}
                     />
                   </Grid>
-                  <Grid size={{ xs: 12, md: 1 }} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Grid size={{ xs: 12, md: 2 }} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Button
                       fullWidth
                       color="error"
                       onClick={clearFilters}
-                      sx={{ minWidth: 'auto', p: 1 }}
-                      title="Clear Filters"
+                      startIcon={<ClearAllIcon />}
+                      sx={{
+                        p: 1,
+                        fontFamily: 'var(--font-bebas-neue)',
+                        fontSize: '1rem',
+                        letterSpacing: '0.05em'
+                      }}
                     >
-                      <ClearAllIcon />
+                      Clear
                     </Button>
                   </Grid>
                 </Grid>

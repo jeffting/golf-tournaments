@@ -15,4 +15,7 @@ export interface Tournament {
     courseName: string;
     contactEmail: string; // email of the person who should be contacted for more details. Doesn't have to be the same as the creator of the tournament.
     externalUrl?: string;
+    startTime?: string; // HH:mm format
+    timezone?: string; // e.g. "America/Denver"
+    createdAt?: number; // timestamp
 }

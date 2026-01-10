@@ -29,14 +29,25 @@ export default function TournamentForm() {
         description: "",
         contactEmail: "",
         externalUrl: "",
+        startTime: "",
+        timezone: "America/Denver", // Default
     });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         if (name.startsWith("location.")) {
             const field = name.split(".")[1];
+
+            // Auto-select timezone based on state
+            let newTimezone = formData.timezone;
+            if (field === "state") {
+                if (value === "AZ") newTimezone = "America/Phoenix";
+                if (value === "UT") newTimezone = "America/Denver";
+            }
+
             setFormData((prev) => ({
                 ...prev,
+                timezone: newTimezone,
                 location: {
                     ...prev.location,
                     [field]: value,
@@ -74,6 +85,9 @@ export default function TournamentForm() {
         }
         if (!["UT", "AZ"].includes(formData.location.state)) {
             return "Please select a supported state (Utah or Arizona).";
+        }
+        if (!formData.startTime) {
+            return "Please select a start time.";
         }
         return null;
     };
@@ -121,6 +135,7 @@ export default function TournamentForm() {
                 const newTournamentRef = doc(tournamentsRef);
                 transaction.set(newTournamentRef, {
                     ...formData,
+                    createdAt: Date.now(),
                     creatorUserId: user.uid,
                     location: {
                         ...formData.location,
@@ -276,6 +291,36 @@ export default function TournamentForm() {
                         onChange={handleChange}
                         placeholder="https://your-tournament-site.com"
                     />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1 uppercase letter-spacing-widest">Start Time</label>
+                        <input
+                            type="time"
+                            name="startTime"
+                            required
+                            className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-lg p-3.5 border text-slate-900 transition-colors"
+                            value={formData.startTime}
+                            onChange={handleChange}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1 uppercase letter-spacing-widest">Timezone</label>
+                        <select
+                            name="timezone"
+                            required
+                            className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-lg p-3.5 border text-slate-900 bg-white transition-colors"
+                            value={formData.timezone}
+                            onChange={handleChange as any}
+                        >
+                            <option value="America/Denver">Mountain Time (MT)</option>
+                            <option value="America/Phoenix">Arizona Time (No DST)</option>
+                            <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                            <option value="America/Chicago">Central Time (CT)</option>
+                            <option value="America/New_York">Eastern Time (ET)</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 

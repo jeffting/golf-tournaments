@@ -20,6 +20,7 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogActions from "@mui/material/DialogActions";
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import EmailIcon from '@mui/icons-material/Email';
 import Link from "next/link";
@@ -150,6 +151,24 @@ function TournamentViewContent() {
                                 {tournament.date.split('-')[1]}-{tournament.date.split('-')[2]}-{tournament.date.split('-')[0]}
                             </Typography>
                         </Box>
+
+                        {tournament.startTime && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <AccessTimeIcon sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
+                                <Typography sx={{ fontSize: '1.2rem', fontWeight: 500 }}>
+                                    {/* Convert 24h to 12h format */}
+                                    {new Date(`2000-01-01T${tournament.startTime}`).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                                    {' '}
+                                    {/* Simple mapping for common zones, fallback to raw */}
+                                    {tournament.timezone === 'America/Denver' ? 'MT' :
+                                        tournament.timezone === 'America/Phoenix' ? 'MST' :
+                                            tournament.timezone === 'America/Los_Angeles' ? 'PT' :
+                                                tournament.timezone === 'America/Chicago' ? 'CT' :
+                                                    tournament.timezone === 'America/New_York' ? 'ET' :
+                                                        ''}
+                                </Typography>
+                            </Box>
+                        )}
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <LocationOnIcon sx={{ color: 'rgba(255, 255, 255, 0.7)' }} />
                             <Typography sx={{ fontSize: '1.2rem', fontWeight: 500 }}>
