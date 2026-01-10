@@ -95,6 +95,15 @@ export default function Navbar() {
                     <Button
                         color="inherit"
                         component={Link}
+                        href="/about"
+                        sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}
+                    >
+                        About
+                    </Button>
+
+                    <Button
+                        color="inherit"
+                        component={Link}
                         href="/tournaments/new"
                         sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}
                     >

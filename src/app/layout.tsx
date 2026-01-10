@@ -22,8 +22,8 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  title: "Golf Tourney Tracker",
-  description: "Track local golf tournaments in your area",
+  title: "Golf Tourney Tracker | Find Golf Tournaments in Utah & Arizona",
+  description: "The easiest place to find and list local golf tournaments. Discover charity scrambles, amateur events, and competitive golf in Utah and Arizona.",
 };
 
 export default function RootLayout({

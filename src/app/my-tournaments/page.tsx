@@ -72,11 +72,10 @@ export default function MyTournamentsPage() {
     return (
         <div className="min-h-screen bg-slate-50">
             <Navbar />
-            <Container maxWidth="xl" sx={{ py: 6 }}>
+            <Container maxWidth="lg" sx={{ py: 6, px: { xs: 3, sm: 4, md: 4 } }}>
                 <Box sx={{ mb: 6 }}>
                     <Typography
-                        variant="div"
-                        component="h1"
+                        variant="h1"
                         sx={{
                             fontFamily: 'var(--font-bebas-neue)',
                             fontSize: '4rem',
@@ -116,7 +115,7 @@ export default function MyTournamentsPage() {
                 ) : (
                     <Grid container spacing={3}>
                         {tournaments.map((tournament) => (
-                            <Grid item key={tournament.id} xs={12} sm={6} md={4} lg={3}>
+                            <Grid key={tournament.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                                 <TournamentCard tournament={tournament} />
                             </Grid>
                         ))}

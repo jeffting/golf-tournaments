@@ -39,7 +39,7 @@ export default function EditTournamentPage() {
                             router.push("/");
                             return;
                         }
-                        setTournament({ id: docSnap.id, ...data });
+                        setTournament(data);
                     } else {
                         console.log("No such document!");
                     }
