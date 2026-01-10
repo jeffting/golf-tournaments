@@ -21,25 +21,34 @@ service cloud.firestore {
       return val is string && val.matches('^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$');
     }
 
+    // Helper to validate tournament data
+    function isValidTournament(data) {
+      return isValidString(data.tournamentName, 3, 50)
+        && isValidString(data.courseName, 3, 100)
+        && data.location.state in ["UT", "AZ"]
+        && isValidString(data.location.city, 3, 50)
+        && isValidString(data.location.street, 3, 50)
+        && isValidString(data.contactEmail, 5, 50)
+        && isValidString(data.description, 5, 1000)
+        && (data.externalUrl == null || isValidString(data.externalUrl, 0, 80))
+        && isValidTime(data.startTime)
+        && isValidString(data.timezone, 3, 50)
+        && data.createdAt is number;
+    }
+
     // Allow public read access to tournaments
     match /tournaments/{tournament} {
       allow read: if true;
       allow create: if request.auth != null 
         && request.auth.uid == request.resource.data.creatorUserId
-        && isValidString(request.resource.data.tournamentName, 3, 50)
-        && isValidString(request.resource.data.courseName, 3, 100)
-        && request.resource.data.location.state in ["UT", "AZ"]
-        && isValidString(request.resource.data.location.city, 3, 50)
-        && isValidString(request.resource.data.location.street, 3, 50)
-        && isValidString(request.resource.data.contactEmail, 5, 50)
-        && isValidString(request.resource.data.description, 5, 1000)
-        && (request.resource.data.externalUrl == null || isValidString(request.resource.data.externalUrl, 0, 80))
-      // New fields validation
-        && isValidTime(request.resource.data.startTime)
-        && isValidString(request.resource.data.timezone, 3, 50)
-        && request.resource.data.createdAt is number
+        && isValidTournament(request.resource.data)
       // Verify usage counter is updated in this transaction and within limit (admins exempt)
         && (isAdmin() || getAfter(/databases/$(database)/documents/userUsage/$(request.auth.token.email)/monthlyStats/$(getYearMonth())).data.count <= 5);
+
+      allow update: if request.auth != null
+        && request.auth.uid == resource.data.creatorUserId
+        && request.auth.uid == request.resource.data.creatorUserId // Cannot change creator
+        && isValidTournament(request.resource.data);
 
       allow delete: if request.auth != null && request.auth.uid == resource.data.creatorUserId;
     }

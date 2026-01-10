@@ -2,12 +2,19 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { collection, addDoc, runTransaction, doc } from "firebase/firestore";
+import { collection, addDoc, runTransaction, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { Typography } from "@mui/material";
+import { Tournament } from "@/types/tournament";
 
-export default function TournamentForm() {
+interface Props {
+    initialData?: Tournament;
+    isEditing?: boolean;
+    tournamentId?: string; // ID of the tournament being edited
+}
+
+export default function TournamentForm({ initialData, isEditing, tournamentId }: Props) {
     const { user } = useAuth();
     const router = useRouter();
     const [loading, setLoading] = useState(false);
@@ -17,20 +24,20 @@ export default function TournamentForm() {
     const today = new Date().toISOString().split("T")[0];
 
     const [formData, setFormData] = useState({
-        tournamentName: "",
-        courseName: "",
-        date: "",
+        tournamentName: initialData?.tournamentName || "",
+        courseName: initialData?.courseName || "",
+        date: initialData?.date || "",
         location: {
-            street: "",
-            city: "",
-            state: "",
-            zip: "",
+            street: initialData?.location.street || "",
+            city: initialData?.location.city || "",
+            state: initialData?.location.state || "",
+            zip: initialData?.location.zip || "",
         },
-        description: "",
-        contactEmail: "",
-        externalUrl: "",
-        startTime: "",
-        timezone: "America/Denver", // Default
+        description: initialData?.description || "",
+        contactEmail: initialData?.contactEmail || "",
+        externalUrl: initialData?.externalUrl || "",
+        startTime: initialData?.startTime || "",
+        timezone: initialData?.timezone || "America/Denver", // Default
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -105,50 +112,64 @@ export default function TournamentForm() {
         }
 
         if (!user) {
-            setError("You must be logged in to create a tournament.");
+            setError("You must be logged in.");
             setLoading(false);
             return;
         }
 
         try {
-            const now = new Date();
-            const yearMonth = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
-            const statsRef = doc(db, "userUsage", user.email!, "monthlyStats", yearMonth);
-
-            await runTransaction(db, async (transaction) => {
-                const statsSnap = await transaction.get(statsRef);
-                const currentCount = statsSnap.exists() ? statsSnap.data().count : 0;
-                const isAdmin = user.email === "jefftingey22@gmail.com";
-
-                if (currentCount >= 5 && !isAdmin) {
-                    throw new Error("Monthly tournament creation limit (5) reached.");
-                }
-
-                // Increment and update stats
-                transaction.set(statsRef, {
-                    count: currentCount + 1,
-                    lastUpdated: Date.now()
-                }, { merge: true });
-
-                // Create tournament
-                const tournamentsRef = collection(db, "tournaments");
-                const newTournamentRef = doc(tournamentsRef);
-                transaction.set(newTournamentRef, {
+            if (isEditing && tournamentId) {
+                // Update existing tournament
+                const tournamentRef = doc(db, "tournaments", tournamentId);
+                await updateDoc(tournamentRef, {
                     ...formData,
-                    createdAt: Date.now(),
-                    creatorUserId: user.uid,
                     location: {
                         ...formData.location,
-                        latitude: 0,
-                        longitude: 0,
+                        latitude: initialData?.location.latitude || 0,
+                        longitude: initialData?.location.longitude || 0,
                     }
                 });
-            });
+                router.push(`/tournaments/view?id=${tournamentId}`);
+            } else {
+                // Create new tournament
+                const now = new Date();
+                const yearMonth = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
+                const statsRef = doc(db, "userUsage", user.email!, "monthlyStats", yearMonth);
 
-            router.push("/");
+                await runTransaction(db, async (transaction) => {
+                    const statsSnap = await transaction.get(statsRef);
+                    const currentCount = statsSnap.exists() ? statsSnap.data().count : 0;
+                    const isAdmin = user.email === "jefftingey22@gmail.com";
+
+                    if (currentCount >= 5 && !isAdmin) {
+                        throw new Error("Monthly tournament creation limit (5) reached.");
+                    }
+
+                    // Increment and update stats
+                    transaction.set(statsRef, {
+                        count: currentCount + 1,
+                        lastUpdated: Date.now()
+                    }, { merge: true });
+
+                    // Create tournament
+                    const tournamentsRef = collection(db, "tournaments");
+                    const newTournamentRef = doc(tournamentsRef);
+                    transaction.set(newTournamentRef, {
+                        ...formData,
+                        createdAt: Date.now(),
+                        creatorUserId: user.uid,
+                        location: {
+                            ...formData.location,
+                            latitude: 0,
+                            longitude: 0,
+                        }
+                    });
+                });
+                router.push("/");
+            }
         } catch (err: any) {
-            console.error("Error creating tournament:", err);
-            setError(err.message || "Failed to create tournament. Please try again.");
+            console.error("Error saving tournament:", err);
+            setError(err.message || "Failed to save tournament. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -156,7 +177,9 @@ export default function TournamentForm() {
 
     return (
         <form onSubmit={handleSubmit} className="mx-auto p-10 bg-white rounded-[32px] shadow-2xl space-y-8 border border-white/20">
-            <h2 className="text-4xl font-bold text-slate-900 mb-8" style={{ fontFamily: 'var(--font-bebas-neue)', letterSpacing: '0.02em' }}>Tournament Information</h2>
+            <h2 className="text-4xl font-bold text-slate-900 mb-8" style={{ fontFamily: 'var(--font-bebas-neue)', letterSpacing: '0.02em' }}>
+                {isEditing ? "Edit Tournament" : "Tournament Information"}
+            </h2>
 
             <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -337,7 +360,7 @@ export default function TournamentForm() {
                     className="w-full inline-flex justify-center py-4 px-6 border border-transparent shadow-xl text-xl font-bold rounded-xl text-white bg-green-800 hover:bg-green-900 focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-all transform hover:-translate-y-1 active:translate-y-0"
                     style={{ fontFamily: 'var(--font-bebas-neue)', letterSpacing: '0.05em' }}
                 >
-                    {loading ? "Registering Tournament..." : "Create Tournament Listing"}
+                    {loading ? (isEditing ? "Updating..." : "Registering...") : (isEditing ? "Update Tournament" : "Create Tournament Listing")}
                 </button>
             </div>
         </form>

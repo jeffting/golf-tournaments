@@ -26,6 +26,7 @@ import EmailIcon from '@mui/icons-material/Email';
 import Link from "next/link";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import GolfCourseIcon from '@mui/icons-material/GolfCourse';
 
 
@@ -176,18 +177,34 @@ function TournamentViewContent() {
                             </Typography>
                         </Box>
                         {isHost && (
-                            <Button
-                                variant="outlined"
-                                color="inherit"
-                                startIcon={<DeleteIcon />}
-                                onClick={handleDelete}
-                                sx={{
-                                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                                    '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)', borderColor: '#ef4444' }
-                                }}
-                            >
-                                Delete
-                            </Button>
+                            <>
+                                <Button
+                                    component={Link}
+                                    href={`/tournaments/edit?id=${tournament.id}`}
+                                    variant="outlined"
+                                    color="inherit"
+                                    startIcon={<EditIcon />}
+                                    sx={{
+                                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                                        '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.1)', borderColor: 'white' },
+                                        mr: 2
+                                    }}
+                                >
+                                    Edit
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    color="inherit"
+                                    startIcon={<DeleteIcon />}
+                                    onClick={handleDelete}
+                                    sx={{
+                                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                                        '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)', borderColor: '#ef4444' }
+                                    }}
+                                >
+                                    Delete
+                                </Button>
+                            </>
                         )}
                     </Box>
                 </Container>
@@ -216,9 +233,56 @@ function TournamentViewContent() {
                                         letterSpacing: '0.02em'
                                     }}
                                 >
-                                    Course & Location
+                                    Date & Location
                                 </Typography>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4, mb: 6 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <Box sx={{
+                                            bgcolor: '#e0f2fe',
+                                            p: 1.5,
+                                            borderRadius: '10px',
+                                            color: '#0284c7'
+                                        }}>
+                                            <CalendarMonthIcon />
+                                        </Box>
+                                        <Box>
+                                            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                Date
+                                            </Typography>
+                                            <Typography variant="body1" sx={{ fontWeight: 600, color: '#0f172a' }}>
+                                                {new Date(tournament.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
 
+                                    {tournament.startTime && (
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Box sx={{
+                                                bgcolor: '#f3e8ff',
+                                                p: 1.5,
+                                                borderRadius: '10px',
+                                                color: '#7e22ce'
+                                            }}>
+                                                <AccessTimeIcon />
+                                            </Box>
+                                            <Box>
+                                                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                    Start Time
+                                                </Typography>
+                                                <Typography variant="body1" sx={{ fontWeight: 600, color: '#0f172a' }}>
+                                                    {new Date(`2000-01-01T${tournament.startTime}`).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                                                    {' '}
+                                                    {tournament.timezone === 'America/Denver' ? 'MT' :
+                                                        tournament.timezone === 'America/Phoenix' ? 'MST' :
+                                                            tournament.timezone === 'America/Los_Angeles' ? 'PT' :
+                                                                tournament.timezone === 'America/Chicago' ? 'CT' :
+                                                                    tournament.timezone === 'America/New_York' ? 'ET' :
+                                                                        ''}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                    )}
+                                </Box>
                                 <Box
                                     component="a"
                                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${tournament.courseName} ${tournament.location.street} ${tournament.location.city} ${tournament.location.state} ${tournament.location.zip}`)}`}
@@ -261,6 +325,8 @@ function TournamentViewContent() {
                                         </Typography>
                                     </Box>
                                 </Box>
+
+
 
                                 <Typography
                                     variant="h4"
