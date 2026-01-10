@@ -129,6 +129,9 @@ export default function Navbar() {
                                 <MenuItem disabled>
                                     <Typography textAlign="center" variant="body2">{user.displayName}</Typography>
                                 </MenuItem>
+                                <MenuItem onClick={handleCloseUserMenu} component={Link} href="/my-tournaments">
+                                    <Typography textAlign="center">My Tournaments</Typography>
+                                </MenuItem>
                                 <MenuItem onClick={handleSignOut}>
                                     <Typography textAlign="center">Sign Out</Typography>
                                 </MenuItem>
