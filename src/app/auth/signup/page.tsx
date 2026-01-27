@@ -23,6 +23,22 @@ export default function SignUp() {
     const [error, setError] = useState("");
     const router = useRouter();
 
+    const validatePassword = (password: string): string | null => {
+        if (password.length < 8) {
+            return "Password must be at least 8 characters long";
+        }
+        if (!/[A-Z]/.test(password)) {
+            return "Password must contain at least one uppercase letter";
+        }
+        if (!/[a-z]/.test(password)) {
+            return "Password must contain at least one lowercase letter";
+        }
+        if (!/[0-9]/.test(password)) {
+            return "Password must contain at least one number";
+        }
+        return null;
+    };
+
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
@@ -33,6 +49,12 @@ export default function SignUp() {
             // We return early without showing a specific error to the bot, 
             // but for UX we might want to redirect to a fake success or just stay silent.
             // For now, we'll just stop the process.
+            return;
+        }
+
+        const passwordError = validatePassword(password);
+        if (passwordError) {
+            setError(passwordError);
             return;
         }
 
@@ -105,6 +127,7 @@ export default function SignUp() {
                             autoComplete="new-password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            helperText="Must be at least 8 characters with 1 uppercase, 1 lowercase, and 1 number"
                         />
 
                         {/* Honeypot field - hidden from users but attractive to bots */}

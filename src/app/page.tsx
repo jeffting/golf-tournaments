@@ -16,7 +16,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import PublicIcon from '@mui/icons-material/Public';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
-import { Collapse, Grid, Select, FormControl, InputLabel } from "@mui/material";
+import { Collapse, Grid, Select, FormControl, InputLabel, Chip, Stack } from "@mui/material";
 import { useMemo } from "react";
 import Link from "next/link";
 import AddIcon from '@mui/icons-material/Add';
@@ -26,8 +26,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [selectedState, setSelectedState] = useState<string>("");
   const [showFilters, setShowFilters] = useState(false);
-  const [filterCity, setFilterCity] = useState("");
-  const [filterCourse, setFilterCourse] = useState("");
+  const [filterCities, setFilterCities] = useState<string[]>([]);
+  const [filterCourses, setFilterCourses] = useState<string[]>([]);
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
 
@@ -57,8 +57,8 @@ export default function Home() {
   // Load filters from localStorage on mount
   useEffect(() => {
     const cachedState = localStorage.getItem("selectedGolfState");
-    const cachedCity = localStorage.getItem("golfFilterCity");
-    const cachedCourse = localStorage.getItem("golfFilterCourse");
+    const cachedCities = localStorage.getItem("golfFilterCities");
+    const cachedCourses = localStorage.getItem("golfFilterCourses");
     const cachedStart = localStorage.getItem("golfFilterStart");
     const cachedEnd = localStorage.getItem("golfFilterEnd");
     const cachedShowFilters = localStorage.getItem("golfShowFilters");
@@ -67,8 +67,27 @@ export default function Home() {
       setSelectedState(cachedState);
       fetchTournaments(cachedState);
     }
-    if (cachedCity) setFilterCity(cachedCity);
-    if (cachedCourse) setFilterCourse(cachedCourse);
+
+    // Handle migration from old single-string format to array
+    if (cachedCities) {
+      try {
+        const parsed = JSON.parse(cachedCities);
+        if (Array.isArray(parsed)) setFilterCities(parsed);
+      } catch {
+        // Legacy support: if it's not JSON, it might be a single string
+        if (cachedCities.trim()) setFilterCities([cachedCities]);
+      }
+    }
+
+    if (cachedCourses) {
+      try {
+        const parsed = JSON.parse(cachedCourses);
+        if (Array.isArray(parsed)) setFilterCourses(parsed);
+      } catch {
+        if (cachedCourses.trim()) setFilterCourses([cachedCourses]);
+      }
+    }
+
     if (cachedStart) setFilterStartDate(cachedStart);
     if (cachedEnd) setFilterEndDate(cachedEnd);
     if (cachedShowFilters === "true") setShowFilters(true);
@@ -77,26 +96,26 @@ export default function Home() {
   // Save filters to localStorage whenever they change
   useEffect(() => {
     if (selectedState) {
-      localStorage.setItem("golfFilterCity", filterCity);
-      localStorage.setItem("golfFilterCourse", filterCourse);
+      localStorage.setItem("golfFilterCities", JSON.stringify(filterCities));
+      localStorage.setItem("golfFilterCourses", JSON.stringify(filterCourses));
       localStorage.setItem("golfFilterStart", filterStartDate);
       localStorage.setItem("golfFilterEnd", filterEndDate);
       localStorage.setItem("golfShowFilters", showFilters.toString());
     }
-  }, [filterCity, filterCourse, filterStartDate, filterEndDate, showFilters, selectedState]);
+  }, [filterCities, filterCourses, filterStartDate, filterEndDate, showFilters, selectedState]);
 
   const handleStateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newState = e.target.value;
     setSelectedState(newState);
     // Reset filters when state changes
-    setFilterCity("");
-    setFilterCourse("");
+    setFilterCities([]);
+    setFilterCourses([]);
     setFilterStartDate("");
     setFilterEndDate("");
 
     // Clear filter cache on state change
-    localStorage.removeItem("golfFilterCity");
-    localStorage.removeItem("golfFilterCourse");
+    localStorage.removeItem("golfFilterCities");
+    localStorage.removeItem("golfFilterCourses");
     localStorage.removeItem("golfFilterStart");
     localStorage.removeItem("golfFilterEnd");
 
@@ -118,25 +137,33 @@ export default function Home() {
 
   const filteredTournaments = useMemo(() => {
     return tournaments.filter(t => {
-      const matchesCity = !filterCity || t.location.city === filterCity;
-      const matchesCourse = !filterCourse || t.courseName === filterCourse;
+      const matchesCity = filterCities.length === 0 || filterCities.includes(t.location.city);
+      const matchesCourse = filterCourses.length === 0 || filterCourses.includes(t.courseName);
       const matchesStart = !filterStartDate || t.date >= filterStartDate;
       const matchesEnd = !filterEndDate || t.date <= filterEndDate;
       return matchesCity && matchesCourse && matchesStart && matchesEnd;
     });
-  }, [tournaments, filterCity, filterCourse, filterStartDate, filterEndDate]);
+  }, [tournaments, filterCities, filterCourses, filterStartDate, filterEndDate]);
 
   const clearFilters = () => {
-    setFilterCity("");
-    setFilterCourse("");
+    setFilterCities([]);
+    setFilterCourses([]);
     setFilterStartDate("");
     setFilterEndDate("");
 
     // Clear localStorage
-    localStorage.removeItem("golfFilterCity");
-    localStorage.removeItem("golfFilterCourse");
+    localStorage.removeItem("golfFilterCities");
+    localStorage.removeItem("golfFilterCourses");
     localStorage.removeItem("golfFilterStart");
     localStorage.removeItem("golfFilterEnd");
+  };
+
+  const handleRemoveCity = (cityToRemove: string) => {
+    setFilterCities(prev => prev.filter(c => c !== cityToRemove));
+  };
+
+  const handleRemoveCourse = (courseToRemove: string) => {
+    setFilterCourses(prev => prev.filter(c => c !== courseToRemove));
   };
 
   return (
@@ -328,12 +355,16 @@ export default function Home() {
                     <FormControl fullWidth size="small">
                       <InputLabel>City</InputLabel>
                       <Select
-                        value={filterCity}
+                        multiple
+                        value={filterCities}
                         label="City"
-                        onChange={(e) => setFilterCity(e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setFilterCities(typeof value === 'string' ? value.split(',') : value);
+                        }}
+                        renderValue={(selected) => selected.length === 0 ? "All Cities" : selected.join(', ')}
                         sx={{ borderRadius: '8px' }}
                       >
-                        <MenuItem value="">All Cities</MenuItem>
                         {activeCities.map(city => (
                           <MenuItem key={city} value={city}>{city}</MenuItem>
                         ))}
@@ -344,12 +375,16 @@ export default function Home() {
                     <FormControl fullWidth size="small">
                       <InputLabel>Golf Course</InputLabel>
                       <Select
-                        value={filterCourse}
+                        multiple
+                        value={filterCourses}
                         label="Golf Course"
-                        onChange={(e) => setFilterCourse(e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setFilterCourses(typeof value === 'string' ? value.split(',') : value);
+                        }}
+                        renderValue={(selected) => selected.length === 0 ? "All Courses" : selected.join(', ')}
                         sx={{ borderRadius: '8px' }}
                       >
-                        <MenuItem value="">All Courses</MenuItem>
                         {activeCourses.map(course => (
                           <MenuItem key={course} value={course}>{course}</MenuItem>
                         ))}
@@ -397,6 +432,32 @@ export default function Home() {
                     </Button>
                   </Grid>
                 </Grid>
+
+                {/* Filter Chips */}
+                {(filterCities.length > 0 || filterCourses.length > 0) && (
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mt: 2 }}>
+                    {filterCities.map(city => (
+                      <Chip
+                        key={city}
+                        label={city}
+                        onDelete={() => handleRemoveCity(city)}
+                        color="success"
+                        variant="outlined"
+                        sx={{ fontWeight: 600 }}
+                      />
+                    ))}
+                    {filterCourses.map(course => (
+                      <Chip
+                        key={course}
+                        label={course}
+                        onDelete={() => handleRemoveCourse(course)}
+                        color="success"
+                        variant="outlined"
+                        sx={{ fontWeight: 600 }}
+                      />
+                    ))}
+                  </Stack>
+                )}
               </Box>
             </Collapse>
           </Box>
