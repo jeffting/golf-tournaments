@@ -172,7 +172,7 @@ export default function Home() {
 
       {/* Full-Width Hero Section */}
       <Box sx={{
-        background: 'linear-gradient(to bottom, #14532d 0%, #267746ff 50%, #011d0cff 100%)',
+        background: 'linear-gradient(to bottom, #14532d 0%, #267746ff 50%, #14532d 100%)',
         pt: { xs: 8, md: 10 },
         pb: { xs: 8, md: 10 },
         textAlign: 'center',

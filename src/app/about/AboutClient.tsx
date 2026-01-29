@@ -19,7 +19,7 @@ export default function AboutClient() {
 
             {/* Hero Section */}
             <Box sx={{
-                background: 'linear-gradient(to bottom, #14532d 0%, #267746ff 50%, #011d0cff 100%)',
+                background: 'linear-gradient(to bottom, #14532d 0%, #267746ff 50%, #14532d 100%)',
                 color: 'white',
                 pt: { xs: 8, md: 12 },
                 pb: { xs: 8, md: 12 },
