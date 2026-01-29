@@ -7,6 +7,7 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { Typography } from "@mui/material";
 import { Tournament } from "@/types/tournament";
+import { validateTournament } from "@/lib/validation";
 
 interface Props {
     initialData?: Tournament;
@@ -68,44 +69,15 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
         }
     };
 
-    const validate = () => {
-        if (formData.tournamentName.length < 3 || formData.tournamentName.length > 50) {
-            return "Tournament Name must be between 3 and 50 characters.";
-        }
-        if (formData.courseName.length < 3 || formData.courseName.length > 100) {
-            return "Golf Course Name must be between 3 and 100 characters.";
-        }
-        if (formData.location.city.length < 3 || formData.location.city.length > 50) {
-            return "City must be between 3 and 50 characters.";
-        }
-        if (formData.location.street.length < 3 || formData.location.street.length > 50) {
-            return "Street Address must be between 3 and 50 characters.";
-        }
-        if (formData.contactEmail.length < 5 || formData.contactEmail.length > 50) {
-            return "Contact Email must be between 5 and 50 characters.";
-        }
-        if (formData.description.length < 5 || formData.description.length > 1000) {
-            return "Description must be between 5 and 1000 characters.";
-        }
-        if (formData.externalUrl && formData.externalUrl.length > 80) {
-            return "Tournament Website URL must be at most 80 characters.";
-        }
-        if (!["UT", "AZ"].includes(formData.location.state)) {
-            return "Please select a supported state (Utah or Arizona).";
-        }
-        if (!formData.startTime) {
-            return "Please select a start time.";
-        }
-        return null;
-    };
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
 
-        const validationError = validate();
-        if (validationError) {
+        const { isValid, error: validationError } = validateTournament(formData);
+        if (!isValid) {
             setError(validationError);
             setLoading(false);
             return;
@@ -184,12 +156,12 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
             <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1 uppercase letter-spacing-widest">Tournament Name</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1">Tournament Name</label>
                         <input
                             type="text"
                             name="tournamentName"
                             required
-                            placeholder="e.g. Masters Invitation"
+                            placeholder="e.g. Bob's Charity Scramble"
                             className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-lg p-3.5 border text-slate-900 transition-colors"
                             value={formData.tournamentName}
                             onChange={handleChange}
@@ -197,7 +169,7 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1 uppercase letter-spacing-widest">Golf Course Name</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1">Golf Course Name</label>
                         <input
                             type="text"
                             name="courseName"
@@ -212,7 +184,7 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1 uppercase letter-spacing-widest">Date</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1">Date</label>
                         <input
                             type="date"
                             name="date"
@@ -225,24 +197,24 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1 uppercase letter-spacing-widest">Contact Email</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1">Contact Email</label>
                         <input
                             type="email"
                             name="contactEmail"
-                            required
                             placeholder="organizer@example.com"
                             className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-lg p-3.5 border text-slate-900 transition-colors"
                             value={formData.contactEmail}
                             onChange={handleChange}
                         />
+                        <p className="mt-1 ml-1 text-xs text-slate-500">Required if no website is provided</p>
                     </div>
                 </div>
 
                 <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
-                    <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', mb: 2 }}>Location Details</Typography>
+                    <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 700, letterSpacing: '0.1em', mb: 2 }}>Location Details</Typography>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="sm:col-span-2">
-                            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Street Address</label>
+                            <label className="block text-xs font-bold text-slate-500 mb-1">Street Address</label>
                             <input
                                 type="text"
                                 name="location.street"
@@ -253,7 +225,7 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">City</label>
+                            <label className="block text-xs font-bold text-slate-500 mb-1">City</label>
                             <input
                                 type="text"
                                 name="location.city"
@@ -264,7 +236,7 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                             />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">State</label>
+                            <label className="block text-xs font-bold text-slate-500 mb-1">State</label>
                             <select
                                 name="location.state"
                                 required
@@ -278,7 +250,7 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                             </select>
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">ZIP / Postal Code</label>
+                            <label className="block text-xs font-bold text-slate-500 mb-1">ZIP / Postal Code</label>
                             <input
                                 type="text"
                                 name="location.zip"
@@ -292,12 +264,12 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1 uppercase letter-spacing-widest">Description</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1">Description</label>
                     <textarea
                         name="description"
                         required
                         rows={4}
-                        placeholder="Tell players about the format, prizes, and schedule..."
+                        placeholder="Tell players about the format, prizes, schedule, and how to sign up etc..."
                         className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-lg p-3.5 border text-slate-900 transition-colors"
                         value={formData.description}
                         onChange={handleChange}
@@ -305,7 +277,7 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1 uppercase letter-spacing-widest">Tournament Website (Optional)</label>
+                    <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1">Tournament Website (Optional)</label>
                     <input
                         type="url"
                         name="externalUrl"
@@ -318,7 +290,7 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1 uppercase letter-spacing-widest">Start Time</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1">Start Time</label>
                         <input
                             type="time"
                             name="startTime"
@@ -329,7 +301,7 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1 uppercase letter-spacing-widest">Timezone</label>
+                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1">Timezone</label>
                         <select
                             name="timezone"
                             required

@@ -18,7 +18,6 @@ import Box from "@mui/material/Box";
 export default function SignUp() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [displayName, setDisplayName] = useState("");
     const [username, setUsername] = useState(""); // Honeypot field
     const [error, setError] = useState("");
     const router = useRouter();
@@ -63,16 +62,10 @@ export default function SignUp() {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // 2. Update profile with display name
-            await updateProfile(user, {
-                displayName: displayName
-            });
-
-            // 3. Create user document in Firestore
+            // 2. Create user document in Firestore (No longer using updateProfile)
             await setDoc(doc(db, "users", user.uid), {
                 userId: user.uid,
                 email: user.email,
-                displayName: displayName,
             });
 
             router.push("/");
@@ -97,22 +90,11 @@ export default function SignUp() {
                             margin="normal"
                             required
                             fullWidth
-                            id="displayName"
-                            label="Display Name"
-                            name="displayName"
-                            autoComplete="name"
-                            autoFocus
-                            value={displayName}
-                            onChange={(e) => setDisplayName(e.target.value)}
-                        />
-                        <TextField
-                            margin="normal"
-                            required
-                            fullWidth
                             id="email"
                             label="Email Address"
                             name="email"
                             autoComplete="email"
+                            autoFocus
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                         />

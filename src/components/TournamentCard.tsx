@@ -8,6 +8,7 @@ import { CardActionArea } from "@mui/material";
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import GolfCourseIcon from '@mui/icons-material/GolfCourse';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import Tooltip from "@mui/material/Tooltip";
 
 interface Props {
     tournament: Tournament;
@@ -46,25 +47,28 @@ export default function TournamentCard({ tournament }: Props) {
                         </Typography>
                     </Box>
                     <Box sx={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', mt: 1.5 }}>
-                        <Typography
-                            variant="h6"
-                            component="div"
-                            className="font-bold text-white text-center"
-                            sx={{
-                                fontFamily: 'var(--font-bebas-neue)',
-                                fontSize: tournament.tournamentName.length > 25 ? '1.4rem' :
-                                    tournament.tournamentName.length > 15 ? '1.7rem' : '2.1rem',
-                                letterSpacing: '0.05em',
-                                lineHeight: 1.1,
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                                width: '100%'
-                            }}
-                        >
-                            {tournament.tournamentName}
-                        </Typography>
+                        <Tooltip title={tournament.tournamentName} arrow placement="top" disableHoverListener={tournament.tournamentName.length <= 40}>
+                            <Typography
+                                variant="h6"
+                                component="div"
+                                className="font-bold text-white text-center"
+                                sx={{
+                                    fontFamily: 'var(--font-bebas-neue)',
+                                    fontSize: tournament.tournamentName.length > 25 ? '1.4rem' :
+                                        tournament.tournamentName.length > 15 ? '1.7rem' : '2.1rem',
+                                    letterSpacing: '0.05em',
+                                    lineHeight: 1.1,
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                    overflow: 'hidden',
+                                    width: '100%',
+                                    cursor: 'default'
+                                }}
+                            >
+                                {tournament.tournamentName}
+                            </Typography>
+                        </Tooltip>
                     </Box>
                 </Box>
 

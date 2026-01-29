@@ -23,17 +23,19 @@ service cloud.firestore {
 
     // Helper to validate tournament data
     function isValidTournament(data) {
-      return isValidString(data.tournamentName, 3, 50)
+      return isValidString(data.tournamentName, 3, 128)
         && isValidString(data.courseName, 3, 100)
         && data.location.state in ["UT", "AZ"]
         && isValidString(data.location.city, 3, 50)
         && isValidString(data.location.street, 3, 50)
-        && isValidString(data.contactEmail, 5, 50)
+        && (
+      (data.contactEmail != null && isValidString(data.contactEmail, 5, 50)) ||
+      (data.externalUrl != null && isValidString(data.externalUrl, 3, 80))
+      )
         && isValidString(data.description, 5, 1000)
-        && (data.externalUrl == null || isValidString(data.externalUrl, 0, 80))
         && isValidTime(data.startTime)
         && isValidString(data.timezone, 3, 50)
-        && data.createdAt is number;
+        && data.get('createdAt', 0) is number;
     }
 
     // Allow public read access to tournaments

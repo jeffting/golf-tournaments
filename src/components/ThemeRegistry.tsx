@@ -5,7 +5,7 @@ import { ReactNode } from "react";
 
 const theme = createTheme({
     typography: {
-        fontFamily: 'var(--font-bebas-neue), sans-serif',
+        fontFamily: 'var(--font-geist-sans), sans-serif',
     },
     components: {
         MuiButton: {

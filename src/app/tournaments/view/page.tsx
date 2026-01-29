@@ -246,7 +246,7 @@ function TournamentViewContent() {
                                             <CalendarMonthIcon />
                                         </Box>
                                         <Box>
-                                            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700, letterSpacing: '0.05em' }}>
                                                 Date
                                             </Typography>
                                             <Typography variant="body1" sx={{ fontWeight: 600, color: '#0f172a' }}>
@@ -266,7 +266,7 @@ function TournamentViewContent() {
                                                 <AccessTimeIcon />
                                             </Box>
                                             <Box>
-                                                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 700, letterSpacing: '0.05em' }}>
                                                     Start Time
                                                 </Typography>
                                                 <Typography variant="body1" sx={{ fontWeight: 600, color: '#0f172a' }}>
@@ -379,19 +379,21 @@ function TournamentViewContent() {
                                     Contact & Links
                                 </Typography>
 
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                        <Box sx={{ bgcolor: 'rgba(255, 255, 255, 0.1)', p: 1, borderRadius: '8px' }}>
-                                            <EmailIcon sx={{ color: '#10b981' }} />
-                                        </Box>
-                                        <Box>
-                                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                                                Inquiries
-                                            </Typography>
-                                            <Typography sx={{ fontWeight: 600 }}>{tournament.contactEmail}</Typography>
-                                        </Box>
-                                    </Box>
 
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                    {tournament.contactEmail && (
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Box sx={{ bgcolor: 'rgba(255, 255, 255, 0.1)', p: 1, borderRadius: '8px' }}>
+                                                <EmailIcon sx={{ color: '#10b981' }} />
+                                            </Box>
+                                            <Box>
+                                                <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', letterSpacing: '0.1em' }}>
+                                                    Inquiries
+                                                </Typography>
+                                                <Typography sx={{ fontWeight: 600 }}>{tournament.contactEmail}</Typography>
+                                            </Box>
+                                        </Box>
+                                    )}
                                     {tournament.externalUrl && (
                                         <>
                                             <Button
@@ -507,7 +509,7 @@ function TournamentViewContent() {
                         </Box>
                     </Grid>
                 </Grid>
-            </Container>
+            </Container >
         </div >
     );
 }

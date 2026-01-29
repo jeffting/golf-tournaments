@@ -87,35 +87,29 @@ export default function Navbar() {
                             color="inherit"
                             component={Link}
                             href="/tournaments/new"
+                            sx={{ fontFamily: 'var(--font-bebas-neue)', fontSize: '1.2rem', letterSpacing: '0.05em' }}
                         >
                             Create
                         </Button>
                     </Box>
 
-                    <Button
-                        color="inherit"
-                        component={Link}
-                        href="/about"
-                        sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}
-                    >
-                        About
-                    </Button>
+
 
                     <Button
                         color="inherit"
                         component={Link}
                         href="/tournaments/new"
-                        sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}
+                        sx={{ mr: 2, display: { xs: 'none', md: 'flex' }, fontFamily: 'var(--font-bebas-neue)', fontSize: '1.2rem', letterSpacing: '0.05em' }}
                     >
                         Create Tournament
                     </Button>
 
                     {user ? (
                         <Box sx={{ flexGrow: 0 }}>
-                            <Tooltip title="Open settings">
+                            <Tooltip title={user.email || "Settings"}>
                                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                    <Avatar alt={user.displayName || "User"} src="/static/images/avatar/2.jpg" sx={{ bgcolor: 'white', color: '#14532d' }}>
-                                        {(user.displayName || "U").charAt(0).toUpperCase()}
+                                    <Avatar alt={user.email || "User"} src="/static/images/avatar/2.jpg" sx={{ bgcolor: 'white', color: '#14532d' }}>
+                                        {(user.email || "U").charAt(0).toUpperCase()}
                                     </Avatar>
                                 </IconButton>
                             </Tooltip>
@@ -135,9 +129,6 @@ export default function Navbar() {
                                 open={Boolean(anchorElUser)}
                                 onClose={handleCloseUserMenu}
                             >
-                                <MenuItem disabled>
-                                    <Typography textAlign="center" variant="body2">{user.displayName}</Typography>
-                                </MenuItem>
                                 <MenuItem onClick={handleCloseUserMenu} component={Link} href="/my-tournaments">
                                     <Typography textAlign="center">My Tournaments</Typography>
                                 </MenuItem>
