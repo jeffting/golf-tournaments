@@ -250,7 +250,10 @@ function TournamentViewContent() {
                                                 Date
                                             </Typography>
                                             <Typography variant="body1" sx={{ fontWeight: 600, color: '#0f172a' }}>
-                                                {new Date(tournament.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                                {(() => {
+                                                    const [year, month, day] = tournament.date.split('-').map(Number);
+                                                    return new Date(year, month - 1, day).toDateString();
+                                                })()}
                                             </Typography>
                                         </Box>
                                     </Box>
