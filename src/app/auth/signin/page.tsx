@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { auth, db } from "@/lib/firebase";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
@@ -13,6 +14,8 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
+import GoogleIcon from "@mui/icons-material/Google";
 
 import { getAuthErrorMessage } from "@/lib/auth-errors";
 
@@ -27,6 +30,29 @@ export default function SignIn() {
         setError(""); // Clear previous errors
         try {
             await signInWithEmailAndPassword(auth, email, password);
+            router.push("/");
+        } catch (err: any) {
+            setError(getAuthErrorMessage(err));
+        }
+    };
+
+    const handleGoogleSignIn = async () => {
+        setError("");
+        const provider = new GoogleAuthProvider();
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+
+            // Check if user document exists in Firestore, if not create it
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (!userDoc.exists()) {
+                await setDoc(doc(db, "users", user.uid), {
+                    userId: user.uid,
+                    email: user.email,
+                    createdAt: new Date().toISOString(),
+                });
+            }
+
             router.push("/");
         } catch (err: any) {
             setError(getAuthErrorMessage(err));
@@ -82,6 +108,33 @@ export default function SignIn() {
                         >
                             Sign In
                         </Button>
+
+                        <Box sx={{ my: 2 }}>
+                            <Divider>
+                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                    OR
+                                </Typography>
+                            </Divider>
+                        </Box>
+
+                        <Button
+                            fullWidth
+                            variant="outlined"
+                            startIcon={<GoogleIcon />}
+                            onClick={handleGoogleSignIn}
+                            sx={{
+                                mb: 2,
+                                py: 1.2,
+                                color: '#1e293b',
+                                borderColor: '#e2e8f0',
+                                '&:hover': { bgcolor: '#f8fafc', borderColor: '#cbd5e1' },
+                                textTransform: 'none',
+                                fontWeight: 600
+                            }}
+                        >
+                            Continue with Google
+                        </Button>
+
                         <div className="text-center mt-4">
                             <Link href="/auth/signup" className="text-sm text-green-700 hover:underline">
                                 {"Don't have an account? Sign Up"}
