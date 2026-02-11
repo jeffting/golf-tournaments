@@ -14,6 +14,8 @@ import Button from "@mui/material/Button";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 
+import { getAuthErrorMessage } from "@/lib/auth-errors";
+
 export default function SignIn() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -22,11 +24,12 @@ export default function SignIn() {
 
     const handleSignIn = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(""); // Clear previous errors
         try {
             await signInWithEmailAndPassword(auth, email, password);
             router.push("/");
         } catch (err: any) {
-            setError(err.message || "Failed to sign in");
+            setError(getAuthErrorMessage(err));
         }
     };
 
@@ -66,6 +69,11 @@ export default function SignIn() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
+                        <div className="flex justify-end">
+                            <Link href="/auth/reset-password" target="_self" className="text-sm text-green-700 hover:underline">
+                                Forgot password?
+                            </Link>
+                        </div>
                         <Button
                             type="submit"
                             fullWidth

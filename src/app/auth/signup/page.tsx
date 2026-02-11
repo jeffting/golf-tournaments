@@ -15,6 +15,8 @@ import Button from "@mui/material/Button";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 
+import { getAuthErrorMessage } from "@/lib/auth-errors";
+
 export default function SignUp() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -23,17 +25,8 @@ export default function SignUp() {
     const router = useRouter();
 
     const validatePassword = (password: string): string | null => {
-        if (password.length < 8) {
-            return "Password must be at least 8 characters long";
-        }
-        if (!/[A-Z]/.test(password)) {
-            return "Password must contain at least one uppercase letter";
-        }
-        if (!/[a-z]/.test(password)) {
-            return "Password must contain at least one lowercase letter";
-        }
-        if (!/[0-9]/.test(password)) {
-            return "Password must contain at least one number";
+        if (password.length < 6) {
+            return "Password must be at least 6 characters long";
         }
         return null;
     };
@@ -70,7 +63,7 @@ export default function SignUp() {
 
             router.push("/");
         } catch (err: any) {
-            setError(err.message || "Failed to sign up");
+            setError(getAuthErrorMessage(err));
         }
     };
 
@@ -109,7 +102,7 @@ export default function SignUp() {
                             autoComplete="new-password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            helperText="Must be at least 8 characters with 1 uppercase, 1 lowercase, and 1 number"
+                            helperText="Must be at least 6 characters"
                         />
 
                         {/* Honeypot field - hidden from users but attractive to bots */}
