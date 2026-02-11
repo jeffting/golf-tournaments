@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
+import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -14,6 +14,8 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
+import Divider from "@mui/material/Divider";
+import GoogleIcon from "@mui/icons-material/Google";
 
 import { getAuthErrorMessage } from "@/lib/auth-errors";
 
@@ -32,15 +34,12 @@ export default function SignUp() {
     };
 
     const handleSignUp = async (e: React.FormEvent) => {
+        // ... existing handleSignUp logic ...
         e.preventDefault();
         setError("");
 
-        // Honeypot check: If the hidden 'username' field is filled, it's likely a bot.
         if (username) {
             console.warn("Honeypot field filled. Bot detected.");
-            // We return early without showing a specific error to the bot, 
-            // but for UX we might want to redirect to a fake success or just stay silent.
-            // For now, we'll just stop the process.
             return;
         }
 
@@ -51,15 +50,37 @@ export default function SignUp() {
         }
 
         try {
-            // 1. Create user in Auth
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // 2. Create user document in Firestore (No longer using updateProfile)
             await setDoc(doc(db, "users", user.uid), {
                 userId: user.uid,
                 email: user.email,
+                createdAt: new Date().toISOString(),
             });
+
+            router.push("/");
+        } catch (err: any) {
+            setError(getAuthErrorMessage(err));
+        }
+    };
+
+    const handleGoogleSignIn = async () => {
+        setError("");
+        const provider = new GoogleAuthProvider();
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+
+            // Check if user document exists in Firestore, if not create it
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (!userDoc.exists()) {
+                await setDoc(doc(db, "users", user.uid), {
+                    userId: user.uid,
+                    email: user.email,
+                    createdAt: new Date().toISOString(),
+                });
+            }
 
             router.push("/");
         } catch (err: any) {
@@ -125,6 +146,33 @@ export default function SignUp() {
                         >
                             Sign Up
                         </Button>
+
+                        <Box sx={{ my: 2 }}>
+                            <Divider>
+                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                    OR
+                                </Typography>
+                            </Divider>
+                        </Box>
+
+                        <Button
+                            fullWidth
+                            variant="outlined"
+                            startIcon={<GoogleIcon />}
+                            onClick={handleGoogleSignIn}
+                            sx={{
+                                mb: 2,
+                                py: 1.2,
+                                color: '#1e293b',
+                                borderColor: '#e2e8f0',
+                                '&:hover': { bgcolor: '#f8fafc', borderColor: '#cbd5e1' },
+                                textTransform: 'none',
+                                fontWeight: 600
+                            }}
+                        >
+                            Continue with Google
+                        </Button>
+
                         <div className="text-center mt-4">
                             <Link href="/auth/signin" className="text-sm text-green-700 hover:underline">
                                 {"Already have an account? Sign In"}
