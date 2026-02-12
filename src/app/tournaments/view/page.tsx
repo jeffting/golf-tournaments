@@ -389,7 +389,13 @@ function TournamentViewContent() {
                                             component="img"
                                             image={tournament.flyerUrl}
                                             alt="Tournament Flyer"
-                                            sx={{ width: '100%', height: 'auto' }}
+                                            sx={{
+                                                width: '100%',
+                                                height: 'auto',
+                                                maxHeight: '50vh',
+                                                objectFit: 'contain',
+                                                bgcolor: '#f1f5f9' // Light background for letterboxing if aspect ratios differ
+                                            }}
                                         />
                                         <Box sx={{ p: 1.5, textAlign: 'center', bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
                                             <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>

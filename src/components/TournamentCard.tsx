@@ -26,16 +26,16 @@ export default function TournamentCard({ tournament }: Props) {
                 <Box
                     sx={{
                         width: '100%',
-                        background: tournament.flyerUrl
-                            ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url(${tournament.flyerUrl})`
-                            : 'linear-gradient(135deg, #2c9553ff 0%, #0b2f19ff 100%)',
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        py: { xs: 2.5, md: 3 },
+                        position: 'relative',
+                        overflow: 'hidden',
+                        py: { xs: 3, md: 4 },
                         px: { xs: 2, md: 2.2 },
-                        position: 'relative'
+                        background: !tournament.flyerUrl
+                            ? 'linear-gradient(135deg, #2c9553ff 0%, #0b2f19ff 100%)'
+                            : '#000',
                     }}
                 >
+                    {/* Event Date Tag */}
                     <Box
                         sx={{
                             position: 'absolute',
@@ -45,9 +45,10 @@ export default function TournamentCard({ tournament }: Props) {
                             alignItems: 'center',
                             gap: 0.5,
                             color: 'rgba(255, 255, 255, 0.9)',
+                            zIndex: 4
                         }}
                     >
-                        <CalendarMonthIcon sx={{ fontSize: { xs: '1rem', md: '1.15rem' } }} />
+                        <CalendarMonthIcon sx={{ fontSize: { xs: '1rem', md: '1.25rem' } }} />
                         <Typography
                             sx={{
                                 fontSize: { xs: '1.3rem', md: '1.5rem' },
@@ -58,36 +59,87 @@ export default function TournamentCard({ tournament }: Props) {
                             {formatDate(tournament.date)}
                         </Typography>
                     </Box>
-                    <Box sx={{ height: { xs: '80px', md: '90px' }, display: 'flex', alignItems: 'center', justifyContent: 'center', mt: { xs: 1.5, md: 2 } }}>
-                        <Tooltip title={tournament.tournamentName} arrow placement="top" disableHoverListener={tournament.tournamentName.length <= 40}>
-                            <Typography
-                                variant="h6"
-                                component="div"
-                                className="font-bold text-white text-center"
+
+                    {tournament.flyerUrl && (
+                        <>
+                            {/* Blurred background for letterboxing */}
+                            <Box
                                 sx={{
-                                    fontFamily: 'var(--font-bebas-neue)',
-                                    fontSize: tournament.tournamentName.length > 25 ? { xs: '1.4rem', md: '1.6rem' } :
-                                        tournament.tournamentName.length > 15 ? { xs: '1.7rem', md: '1.9rem' } : { xs: '2.1rem', md: '2.4rem' },
-                                    letterSpacing: '0.05em',
-                                    lineHeight: 1.1,
-                                    display: '-webkit-box',
-                                    WebkitLineClamp: 2,
-                                    WebkitBoxOrient: 'vertical',
-                                    overflow: 'hidden',
-                                    width: '100%',
-                                    cursor: 'default',
-                                    textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    backgroundImage: `url(${tournament.flyerUrl})`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                    filter: 'blur(20px) brightness(0.5)',
+                                    transform: 'scale(1.1)', // Prevent white edges from blur
+                                    zIndex: 0
                                 }}
-                            >
-                                {tournament.tournamentName}
-                            </Typography>
-                        </Tooltip>
+                            />
+                            {/* Sharp image contained */}
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    backgroundImage: `url(${tournament.flyerUrl})`,
+                                    backgroundSize: 'contain',
+                                    backgroundPosition: 'center',
+                                    backgroundRepeat: 'no-repeat',
+                                    zIndex: 1
+                                }}
+                            />
+                            {/* Gradient for text readability */}
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    background: 'linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.6))',
+                                    zIndex: 2
+                                }}
+                            />
+                        </>
+                    )}
+
+                    <Box sx={{ position: 'relative', zIndex: 3 }}>
+                        <Box sx={{ height: { xs: '90px', md: '110px' }, display: 'flex', alignItems: 'center', justifyContent: 'center', mt: { xs: 2, md: 3 } }}>
+                            <Tooltip title={tournament.tournamentName} arrow placement="top" disableHoverListener={tournament.tournamentName.length <= 40}>
+                                <Typography
+                                    variant="h6"
+                                    component="div"
+                                    className="font-bold text-white text-center"
+                                    sx={{
+                                        fontFamily: 'var(--font-bebas-neue)',
+                                        fontSize: tournament.tournamentName.length > 25 ? { xs: '1.4rem', md: '1.6rem' } :
+                                            tournament.tournamentName.length > 15 ? { xs: '1.7rem', md: '1.9rem' } : { xs: '2.1rem', md: '2.4rem' },
+                                        letterSpacing: '0.05em',
+                                        lineHeight: 1.1,
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden',
+                                        width: '100%',
+                                        cursor: 'default',
+                                        textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                                    }}
+                                >
+                                    {tournament.tournamentName}
+                                </Typography>
+                            </Tooltip>
+                        </Box>
                     </Box>
                 </Box>
 
-                <CardContent sx={{ width: '100%', flexGrow: 1, px: { xs: 2, md: 3 }, py: { xs: 2, md: 2.5 } }}>
+                <CardContent sx={{ width: '100%', flexGrow: 1, px: { xs: 2, md: 3 }, py: { xs: 2.5, md: 3.5 } }}>
 
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1.5, md: 2 }, alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2, md: 3 }, alignItems: 'center' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, md: 2 }, width: '100%', maxWidth: { xs: '280px', md: '360px' } }}>
                             <GolfCourseIcon sx={{ color: '#14532d', minWidth: '20px', fontSize: { xs: '1.25rem', md: '1.5rem' } }} />
                             <Typography
