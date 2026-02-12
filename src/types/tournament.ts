@@ -18,4 +18,5 @@ export interface Tournament {
     startTime?: string; // HH:mm format
     timezone?: string; // e.g. "America/Denver"
     createdAt?: number; // timestamp
+    flyerUrl?: string;
 }

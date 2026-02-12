@@ -30,12 +30,13 @@ service cloud.firestore {
         && isValidString(data.location.street, 3, 50)
         && (
       (data.contactEmail != null && isValidString(data.contactEmail, 5, 50)) ||
-      (data.externalUrl != null && isValidString(data.externalUrl, 3, 80))
+      (data.externalUrl != null && isValidString(data.externalUrl, 3, 300))
       )
         && isValidString(data.description, 5, 1000)
         && isValidTime(data.startTime)
         && isValidString(data.timezone, 3, 50)
-        && data.get('createdAt', 0) is number;
+        && data.get('createdAt', 0) is number
+        && (!('flyerUrl' in data) || (data.flyerUrl is string && data.flyerUrl.size() <= 1000));
     }
 
     // Allow public read access to tournaments

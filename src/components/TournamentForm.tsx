@@ -3,11 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { collection, addDoc, runTransaction, doc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, storage } from "@/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "@/context/AuthContext";
-import { Typography } from "@mui/material";
+import { Typography, Box as MuiBox, CardMedia } from "@mui/material";
 import { Tournament } from "@/types/tournament";
 import { validateTournament } from "@/lib/validation";
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 interface Props {
     initialData?: Tournament;
@@ -20,6 +23,8 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [flyerFile, setFlyerFile] = useState<File | null>(null);
+    const [flyerPreview, setFlyerPreview] = useState<string | null>(initialData?.flyerUrl || null);
 
     // Get today's date in YYYY-MM-DD format for min date attribute
     const today = new Date().toISOString().split("T")[0];
@@ -40,6 +45,66 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
         startTime: initialData?.startTime || "",
         timezone: initialData?.timezone || "America/Denver", // Default
     });
+
+    const compressImage = async (file: File): Promise<Blob> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target?.result as string;
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    const MAX_WIDTH = 1200;
+                    const MAX_HEIGHT = 1600;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext("2d");
+                    ctx?.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob(
+                        (blob) => {
+                            if (blob) {
+                                resolve(blob);
+                            } else {
+                                reject(new Error("Canvas to Blob conversion failed"));
+                            }
+                        },
+                        "image/jpeg",
+                        0.7 // Compression quality
+                    );
+                };
+            };
+            reader.onerror = (error) => reject(error);
+        });
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 10 * 1024 * 1024) { // 10MB limit for raw upload before compression
+                setError("Image is too large. Please select a file smaller than 10MB.");
+                return;
+            }
+            setFlyerFile(file);
+            setFlyerPreview(URL.createObjectURL(file));
+        }
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -90,11 +155,22 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
         }
 
         try {
+            let flyerUrl = initialData?.flyerUrl || "";
+
+            // Upload flyer if a new one was selected
+            if (flyerFile) {
+                const compressedBlob = await compressImage(flyerFile);
+                const storageRef = ref(storage, `flyers/${tournamentId || Date.now()}-${flyerFile.name}`);
+                const snapshot = await uploadBytes(storageRef, compressedBlob);
+                flyerUrl = await getDownloadURL(snapshot.ref);
+            }
+
             if (isEditing && tournamentId) {
                 // Update existing tournament
                 const tournamentRef = doc(db, "tournaments", tournamentId);
                 await updateDoc(tournamentRef, {
                     ...formData,
+                    flyerUrl,
                     location: {
                         ...formData.location,
                         latitude: initialData?.location.latitude || 0,
@@ -128,6 +204,7 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                     const newTournamentRef = doc(tournamentsRef);
                     transaction.set(newTournamentRef, {
                         ...formData,
+                        flyerUrl,
                         createdAt: Date.now(),
                         creatorUserId: user.uid,
                         location: {
@@ -208,6 +285,54 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                         />
                         <p className="mt-1 ml-1 text-xs text-slate-500">Required if no website is provided</p>
                     </div>
+                </div>
+
+                <div className="p-6 bg-slate-50 rounded-2xl border border-dashed border-slate-300 space-y-4">
+                    <Typography variant="subtitle2" sx={{ color: '#64748b', fontWeight: 700, letterSpacing: '0.1em' }}>Tournament Flyer (Optional)</Typography>
+
+                    <div className="flex flex-col md:flex-row gap-6 items-center">
+                        <div className="w-full md:w-1/2">
+                            <label className="relative flex flex-col items-center justify-center w-full h-48 border-2 border-slate-300 border-dashed rounded-xl cursor-pointer bg-white hover:bg-slate-50 transition-colors">
+                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                                    <CloudUploadIcon sx={{ fontSize: 40, color: '#64748b', mb: 1 }} />
+                                    <p className="mb-2 text-sm text-slate-700 font-semibold">Click to upload flyer</p>
+                                    <p className="text-xs text-slate-500">JPG, PNG or WEBP (Max 10MB)</p>
+                                </div>
+                                <input
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleFileChange}
+                                />
+                            </label>
+                        </div>
+
+                        {flyerPreview && (
+                            <div className="w-full md:w-1/2 relative">
+                                <MuiBox sx={{ position: 'relative', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                                    <CardMedia
+                                        component="img"
+                                        image={flyerPreview}
+                                        alt="Flyer Preview"
+                                        sx={{ height: 192, objectFit: 'contain', bgcolor: '#f1f5f9' }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setFlyerFile(null);
+                                            setFlyerPreview(initialData?.flyerUrl || null);
+                                        }}
+                                        className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-white text-red-600 rounded-full shadow-md transition-colors"
+                                    >
+                                        <DeleteIcon fontSize="small" />
+                                    </button>
+                                </MuiBox>
+                            </div>
+                        )}
+                    </div>
+                    <p className="text-xs text-slate-500 italic">
+                        Images are compressed automatically to ensure fast loading times.
+                    </p>
                 </div>
 
                 <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">

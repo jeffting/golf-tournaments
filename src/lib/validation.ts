@@ -39,9 +39,9 @@ export const validateTournament = (data: any): ValidationResult => {
         return { isValid: false, error: "Contact Email must be between 5 and 50 characters." };
     }
 
-    // External URL (max 80 if provided)
-    if (data.externalUrl && data.externalUrl.length > 80) {
-        return { isValid: false, error: "Tournament Website URL must be at most 80 characters." };
+    // External URL (max 300 if provided)
+    if (data.externalUrl && data.externalUrl.length > 300) {
+        return { isValid: false, error: "Tournament Website URL must be at most 300 characters." };
     }
 
     // Description (5-1000)

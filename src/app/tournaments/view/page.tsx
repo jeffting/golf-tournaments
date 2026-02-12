@@ -28,6 +28,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import GolfCourseIcon from '@mui/icons-material/GolfCourse';
+import { CardMedia } from "@mui/material";
 
 
 function TournamentViewContent() {
@@ -38,6 +39,7 @@ function TournamentViewContent() {
     const [tournament, setTournament] = useState<Tournament | null>(null);
     const [loading, setLoading] = useState(true);
     const [openLinkDialog, setOpenLinkDialog] = useState(false);
+    const [openFlyerModal, setOpenFlyerModal] = useState(false);
 
     useEffect(() => {
         if (!id) return;
@@ -354,6 +356,86 @@ function TournamentViewContent() {
                                     {tournament.description}
                                 </Typography>
                             </Box>
+
+                            {tournament.flyerUrl && (
+                                <Box sx={{ mb: 6 }}>
+                                    <Typography
+                                        variant="h4"
+                                        sx={{
+                                            fontFamily: 'var(--font-bebas-neue)',
+                                            color: '#1e293b',
+                                            mb: 3,
+                                            letterSpacing: '0.02em'
+                                        }}
+                                    >
+                                        Tournament Flyer
+                                    </Typography>
+                                    <Box
+                                        onClick={() => setOpenFlyerModal(true)}
+                                        sx={{
+                                            cursor: 'pointer',
+                                            borderRadius: '16px',
+                                            overflow: 'hidden',
+                                            border: '1px solid #e2e8f0',
+                                            transition: 'transform 0.2s',
+                                            '&:hover': {
+                                                transform: 'scale(1.01)',
+                                                boxShadow: '0 10px 30px -10px rgba(0,0,0,0.1)'
+                                            },
+                                            maxWidth: '500px'
+                                        }}
+                                    >
+                                        <CardMedia
+                                            component="img"
+                                            image={tournament.flyerUrl}
+                                            alt="Tournament Flyer"
+                                            sx={{ width: '100%', height: 'auto' }}
+                                        />
+                                        <Box sx={{ p: 1.5, textAlign: 'center', bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+                                            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
+                                                Click to enlarge
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+
+                                    <Dialog
+                                        open={openFlyerModal}
+                                        onClose={() => setOpenFlyerModal(false)}
+                                        maxWidth="lg"
+                                        PaperProps={{
+                                            sx: {
+                                                borderRadius: '24px',
+                                                bgcolor: 'transparent',
+                                                boxShadow: 'none',
+                                                overflow: 'visible'
+                                            }
+                                        }}
+                                    >
+                                        <Box
+                                            onClick={() => setOpenFlyerModal(false)}
+                                            sx={{
+                                                position: 'relative',
+                                                p: 1,
+                                                display: 'flex',
+                                                justifyContent: 'center',
+                                                alignItems: 'center'
+                                            }}
+                                        >
+                                            <CardMedia
+                                                component="img"
+                                                image={tournament.flyerUrl}
+                                                alt="Tournament Flyer Full"
+                                                sx={{
+                                                    maxWidth: '100%',
+                                                    maxHeight: '90vh',
+                                                    borderRadius: '16px',
+                                                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                                                }}
+                                            />
+                                        </Box>
+                                    </Dialog>
+                                </Box>
+                            )}
                         </Paper>
                     </Grid>
 
