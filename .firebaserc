@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "golf-tourney-tracker-dev"
+    "default": "golf-tourney-tracker-dev",
+    "production": "golf-tourney-tracker-pro-5af0c"
   }
 }
