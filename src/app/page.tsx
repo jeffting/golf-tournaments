@@ -65,10 +65,9 @@ export default function Home() {
     const cachedEnd = localStorage.getItem("golfFilterEnd");
     const cachedShowFilters = localStorage.getItem("golfShowFilters");
 
-    if (cachedState && (cachedState === "UT" || cachedState === "AZ")) {
-      setSelectedState(cachedState);
-      fetchTournaments(cachedState);
-    }
+    const finalState = (cachedState === "UT" || cachedState === "AZ") ? cachedState : "AZ";
+    setSelectedState(finalState);
+    fetchTournaments(finalState);
 
     // Handle migration from old single-string format to array
     if (cachedCities) {
@@ -317,8 +316,8 @@ export default function Home() {
                     }}
                   >
                     <MenuItem value="" disabled>Choose Location</MenuItem>
-                    <MenuItem value="UT" sx={{ py: 2, fontWeight: '600' }}>Utah</MenuItem>
                     <MenuItem value="AZ" sx={{ py: 2, fontWeight: '600' }}>Arizona</MenuItem>
+                    <MenuItem value="UT" sx={{ py: 2, fontWeight: '600' }}>Utah</MenuItem>
                   </TextField>
                 </Box>
 

@@ -28,8 +28,19 @@ export const getAuthErrorMessage = (error: any): string => {
         case "auth/weak-password":
             return "The password is too weak.";
 
+        // Google / Third-party Auth Errors
+        case "auth/unauthorized-domain":
+            return "This domain is not authorized for sign-in.";
+        case "auth/popup-closed-by-user":
+            return "The sign-in popup was closed before completion. Please try again.";
+        case "auth/cancelled-popup-request":
+            return "The sign-in request was cancelled. Please try again.";
+        case "auth/popup-blocked":
+            return "The sign-in popup was blocked by your browser. Please allow popups for this site.";
+
         default:
-            console.error("Unhanded Auth Error:", error);
-            return "An unexpected error occurred. Please try again.";
+            console.error("Unhandled Auth Error:", error);
+            // Include code in the user message if possible to help with debugging
+            return `An unexpected error occurred (${code}). Please try again.`;
     }
 };

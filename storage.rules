@@ -1,0 +1,33 @@
+rules_version = '2';
+service firebase.storage {
+    match /b/{bucket}/o {
+        match /flyers/{userId}/{allPaths=**} {
+            // Allow public read access to all flyers
+            allow read: if true;
+
+            // Only authenticated users can upload to their own folder
+            // Restrict files to images and limit size to 5MB (after compression)
+            allow write: if request.auth != null 
+                && request.auth.uid == userId
+                && request.resource.size < 5 * 1024 * 1024
+                    && request.resource.contentType.matches('image/.*');
+
+                // Only the owner can delete their own flyer
+                allow delete: if request.auth != null && request.auth.uid == userId;
+            }
+
+            // Support for the legacy path (flyers directly in the /flyers/ folder)
+            // We allow anyone who is authenticated to write here for now to avoid breaking 
+            // existing tournaments during transition, but we'll prioritize the userId path.
+            match /flyers/{fileName} {
+                allow read: if true;
+                allow create: if request.auth != null 
+                    && request.resource.size < 5 * 1024 * 1024
+                        && request.resource.contentType.matches('image/.*');
+                    // For updates/deletes in the legacy path, we can't easily verify ownership 
+                    // without metadata, so we'll be slightly more restrictive or allow admins.
+                    allow update, delete: if request.auth != null 
+                        && (request.auth.token.email == "golftourneytrackerservice@gmail.com");
+                }
+            }
+        }

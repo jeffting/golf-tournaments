@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { collection, addDoc, runTransaction, doc, updateDoc } from "firebase/firestore";
-import { db, storage } from "@/lib/firebase";
+import { collection, addDoc, runTransaction, doc, updateDoc, getDoc } from "firebase/firestore";
+import { db, auth, storage, analytics } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { logEvent } from "firebase/analytics";
 import { useAuth } from "@/context/AuthContext";
 import { Typography, Box as MuiBox, CardMedia } from "@mui/material";
 import { Tournament } from "@/types/tournament";
@@ -41,6 +42,7 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
         },
         description: initialData?.description || "",
         contactEmail: initialData?.contactEmail || "",
+        contactPhone: initialData?.contactPhone || "",
         externalUrl: initialData?.externalUrl || "",
         startTime: initialData?.startTime || "",
         timezone: initialData?.timezone || "America/Denver", // Default
@@ -127,9 +129,27 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                 },
             }));
         } else {
+            let finalValue = value;
+            if (name === "contactPhone") {
+                // Strip everything except numbers
+                const digits = value.replace(/\D/g, "");
+
+                // Format: (XXX) XXX-XXXX
+                if (digits.length <= 3) {
+                    finalValue = digits;
+                } else if (digits.length <= 6) {
+                    finalValue = `(${digits.slice(0, 3)}) ${digits.slice(3)} `;
+                } else {
+                    finalValue = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)} -${digits.slice(6, 10)} `;
+                    if (digits.length > 10) {
+                        finalValue += digits.slice(10);
+                    }
+                }
+            }
+
             setFormData((prev) => ({
                 ...prev,
-                [name]: value,
+                [name]: finalValue,
             }));
         }
     };
@@ -160,9 +180,16 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
             // Upload flyer if a new one was selected
             if (flyerFile) {
                 const compressedBlob = await compressImage(flyerFile);
-                const storageRef = ref(storage, `flyers/${tournamentId || Date.now()}-${flyerFile.name}`);
+                // Use user.uid in path for security rules compatibility
+                const storageRef = ref(storage, `flyers / ${user.uid}/${tournamentId || Date.now()}-${flyerFile.name}`);
                 const snapshot = await uploadBytes(storageRef, compressedBlob);
                 flyerUrl = await getDownloadURL(snapshot.ref);
+                if (analytics) {
+                    logEvent(analytics, "flyer_uploaded", {
+                        file_name: flyerFile.name,
+                        file_size: flyerFile.size
+                    });
+                }
             }
 
             if (isEditing && tournamentId) {
@@ -177,6 +204,12 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                         longitude: initialData?.location.longitude || 0,
                     }
                 });
+                if (analytics) {
+                    logEvent(analytics, "tournament_edited", {
+                        tournament_id: tournamentId,
+                        tournament_name: formData.tournamentName
+                    });
+                }
                 router.push(`/tournaments/view?id=${tournamentId}`);
             } else {
                 // Create new tournament
@@ -187,7 +220,7 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                 await runTransaction(db, async (transaction) => {
                     const statsSnap = await transaction.get(statsRef);
                     const currentCount = statsSnap.exists() ? statsSnap.data().count : 0;
-                    const isAdmin = user.email === "jefftingey22@gmail.com";
+                    const isAdmin = user.email === "golftourneytrackerservice@gmail.com";
 
                     if (currentCount >= 5 && !isAdmin) {
                         throw new Error("Monthly tournament creation limit (5) reached.");
@@ -214,6 +247,12 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                         }
                     });
                 });
+                if (analytics) {
+                    logEvent(analytics, "tournament_created", {
+                        tournament_name: formData.tournamentName,
+                        state: formData.location.state
+                    });
+                }
                 router.push("/");
             }
         } catch (err: any) {
@@ -272,18 +311,52 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                             onChange={handleChange}
                         />
                     </div>
+                </div>
+
+                <div className="p-6 bg-emerald-50/50 rounded-2xl border border-emerald-100 space-y-4">
+                    <div className="flex items-center justify-between">
+                        <Typography variant="subtitle2" sx={{ color: '#065f46', fontWeight: 700, letterSpacing: '0.1em' }}>
+                            Contact Information
+                        </Typography>
+                        <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest bg-emerald-100 px-2 py-1 rounded">At least one required</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 mb-1 ml-1">Contact Email</label>
+                            <input
+                                type="email"
+                                name="contactEmail"
+                                placeholder="organizer@example.com"
+                                className="block w-full rounded-lg border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 p-3 border text-slate-900 bg-white transition-colors"
+                                value={formData.contactEmail}
+                                onChange={handleChange}
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-bold text-slate-500 mb-1 ml-1">Contact Phone</label>
+                            <input
+                                type="tel"
+                                name="contactPhone"
+                                placeholder="(555) 000-0000"
+                                className="block w-full rounded-lg border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 p-3 border text-slate-900 bg-white transition-colors"
+                                value={formData.contactPhone}
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1">Contact Email</label>
+                        <label className="block text-xs font-bold text-slate-500 mb-1 ml-1">Tournament Website</label>
                         <input
-                            type="email"
-                            name="contactEmail"
-                            placeholder="organizer@example.com"
-                            className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-lg p-3.5 border text-slate-900 transition-colors"
-                            value={formData.contactEmail}
+                            type="url"
+                            name="externalUrl"
+                            placeholder="https://my-tournament.com"
+                            className="block w-full rounded-lg border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 p-3 border text-slate-900 bg-white transition-colors"
+                            value={formData.externalUrl}
                             onChange={handleChange}
                         />
-                        <p className="mt-1 ml-1 text-xs text-slate-500">Required if no website is provided</p>
                     </div>
                 </div>
 
@@ -370,8 +443,8 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                                 onChange={handleChange as any}
                             >
                                 <option value="">Select State</option>
-                                <option value="UT">Utah</option>
                                 <option value="AZ">Arizona</option>
+                                <option value="UT">Utah</option>
                             </select>
                         </div>
                         <div>
@@ -398,18 +471,6 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                         className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-lg p-3.5 border text-slate-900 transition-colors"
                         value={formData.description}
                         onChange={handleChange}
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1 ml-1">Tournament Website (Optional)</label>
-                    <input
-                        type="url"
-                        name="externalUrl"
-                        className="block w-full rounded-xl border-slate-200 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 text-lg p-3.5 border text-slate-900 transition-colors"
-                        value={formData.externalUrl}
-                        onChange={handleChange}
-                        placeholder="https://your-tournament-site.com"
                     />
                 </div>
 

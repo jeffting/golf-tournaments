@@ -4,6 +4,8 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeRegistry } from "@/components/ThemeRegistry";
 import FirebaseAppCheck from "@/components/FirebaseAppCheck";
+import FirebaseAnalytics from "@/components/FirebaseAnalytics";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,7 +24,7 @@ const bebasNeue = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
-  title: "Golf Tourney Tracker | Find Golf Tournaments in Utah & Arizona",
+  title: "Golf Tourney Tracker | Find Local Golf Tournaments",
   description: "The easiest place to find and list local golf tournaments. Discover charity scrambles, amateur events, and competitive golf in Utah and Arizona.",
 };
 
@@ -39,6 +41,9 @@ export default function RootLayout({
         <ThemeRegistry>
           <AuthProvider>
             <FirebaseAppCheck />
+            <Suspense fallback={null}>
+              <FirebaseAnalytics />
+            </Suspense>
             {children}
           </AuthProvider>
         </ThemeRegistry>

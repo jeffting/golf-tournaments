@@ -29,9 +29,9 @@ export const validateTournament = (data: any): ValidationResult => {
         return { isValid: false, error: "Street Address must be between 3 and 50 characters." };
     }
 
-    // Contact Email or External URL (at least one required)
-    if (!data.contactEmail && !data.externalUrl) {
-        return { isValid: false, error: "Please provide either a contact email or a tournament website." };
+    // At least one contact method required
+    if (!data.contactEmail && !data.externalUrl && !data.contactPhone) {
+        return { isValid: false, error: "Please provide at least one contact method (Email, Phone, or Website)." };
     }
 
     // Contact Email (5-50 if provided)
@@ -39,14 +39,25 @@ export const validateTournament = (data: any): ValidationResult => {
         return { isValid: false, error: "Contact Email must be between 5 and 50 characters." };
     }
 
+    // Contact Phone Validation (based on digits)
+    if (data.contactPhone) {
+        const digits = data.contactPhone.replace(/\D/g, "");
+        if (digits.length > 20) {
+            return { isValid: false, error: "Contact Phone number is too long." };
+        }
+        if (digits.length < 10) {
+            return { isValid: false, error: "Contact Phone number is too short." };
+        }
+    }
+
     // External URL (max 300 if provided)
     if (data.externalUrl && data.externalUrl.length > 300) {
         return { isValid: false, error: "Tournament Website URL must be at most 300 characters." };
     }
 
-    // Description (5-1000)
-    if (!data.description || data.description.length < 5 || data.description.length > 1000) {
-        return { isValid: false, error: "Description must be between 5 and 1000 characters." };
+    // Description (5-4000)
+    if (!data.description || data.description.length < 5 || data.description.length > 4000) {
+        return { isValid: false, error: "Description must be between 5 and 4000 characters." };
     }
 
     // Start Time (HH:mm format)

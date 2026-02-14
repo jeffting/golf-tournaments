@@ -2,7 +2,7 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
-// import { getAnalytics } from "firebase/analytics"; 
+import { getAnalytics, isSupported } from "firebase/analytics";
 
 const firebaseConfig = {
     apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -20,7 +20,7 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// Analytics can only differ in browser environment, so conditional check might be needed
-// export const analytics = typeof window !== "undefined" ? getAnalytics(app) : null;
+// Analytics can only exist in browser environment
+export const analytics = typeof window !== "undefined" ? getAnalytics(app) : null;
 
 export { app, db, auth, storage };

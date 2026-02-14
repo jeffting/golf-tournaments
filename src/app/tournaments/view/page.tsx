@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { db } from "@/lib/firebase";
+import { db, auth, analytics } from "@/lib/firebase";
 import { doc, getDoc, deleteDoc } from "firebase/firestore";
+import { logEvent } from "firebase/analytics";
 import { Tournament } from "@/types/tournament";
 import Navbar from "@/components/Navbar";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -14,11 +15,6 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Dialog from "@mui/material/Dialog";
-import DialogTitle from "@mui/material/DialogTitle";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogActions from "@mui/material/DialogActions";
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -28,6 +24,9 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import GolfCourseIcon from '@mui/icons-material/GolfCourse';
+import PhoneIcon from '@mui/icons-material/Phone';
+import LinkifiedText from "@/components/LinkifiedText";
+import LinkSafetyDialog from "@/components/LinkSafetyDialog";
 import { CardMedia } from "@mui/material";
 
 
@@ -141,7 +140,8 @@ function TournamentViewContent() {
                             fontSize: { xs: '3.5rem', md: '6rem' },
                             lineHeight: 0.9,
                             mb: 2,
-                            textShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                            textShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                            overflowWrap: 'break-word'
                         }}
                     >
                         {tournament.tournamentName}
@@ -225,6 +225,52 @@ function TournamentViewContent() {
                                 boxShadow: '0 4px 20px -5px rgba(0,0,0,0.05)'
                             }}
                         >
+                            {/* Mobile Flyer Placement */}
+                            {tournament.flyerUrl && (
+                                <Box sx={{ display: { xs: 'block', md: 'none' }, mb: 6 }}>
+                                    <Typography
+                                        variant="h4"
+                                        sx={{
+                                            fontFamily: 'var(--font-bebas-neue)',
+                                            color: '#1e293b',
+                                            mb: 2,
+                                            letterSpacing: '0.02em',
+                                            fontSize: '2rem'
+                                        }}
+                                    >
+                                        Tournament Flyer
+                                    </Typography>
+                                    <Box
+                                        onClick={() => setOpenFlyerModal(true)}
+                                        sx={{
+                                            cursor: 'pointer',
+                                            borderRadius: '20px',
+                                            overflow: 'hidden',
+                                            border: '1px solid #e2e8f0',
+                                            transition: 'transform 0.2s',
+                                        }}
+                                    >
+                                        <CardMedia
+                                            component="img"
+                                            image={tournament.flyerUrl}
+                                            alt="Tournament Flyer"
+                                            sx={{
+                                                width: '100%',
+                                                height: 'auto',
+                                                maxHeight: '400px',
+                                                objectFit: 'contain',
+                                                bgcolor: '#f1f5f9'
+                                            }}
+                                        />
+                                        <Box sx={{ p: 1.5, textAlign: 'center', bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+                                            <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 600 }}>
+                                                Click to enlarge
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                </Box>
+                            )}
+
                             <Box sx={{ mb: 6 }}>
                                 <Typography
                                     variant="h4"
@@ -237,6 +283,7 @@ function TournamentViewContent() {
                                 >
                                     Date & Location
                                 </Typography>
+                                {/* ... rest of content ... */}
                                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4, mb: 6 }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                                         <Box sx={{
@@ -350,22 +397,133 @@ function TournamentViewContent() {
                                         color: '#475569',
                                         lineHeight: 1.8,
                                         fontSize: '1.1rem',
-                                        whiteSpace: 'pre-wrap'
+                                        whiteSpace: 'pre-wrap',
+                                        overflowWrap: 'break-word'
                                     }}
                                 >
-                                    {tournament.description}
+                                    <LinkifiedText text={tournament.description} />
                                 </Typography>
                             </Box>
 
+                        </Paper>
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                        <Box sx={{ position: 'sticky', top: 24 }}>
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    p: 4,
+                                    borderRadius: '24px',
+                                    bgcolor: '#1e293b',
+                                    color: 'white',
+                                    mb: 4,
+                                    border: '1px solid #334155'
+                                }}
+                            >
+                                <Typography
+                                    variant="h5"
+                                    sx={{
+                                        fontFamily: 'var(--font-bebas-neue)',
+                                        mb: 4,
+                                        letterSpacing: '0.05em'
+                                    }}
+                                >
+                                    Contact & Links
+                                </Typography>
+
+
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                    {tournament.contactEmail && (
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Box sx={{ bgcolor: 'rgba(255, 255, 255, 0.1)', p: 1, borderRadius: '8px' }}>
+                                                <EmailIcon sx={{ color: '#10b981' }} />
+                                            </Box>
+                                            <Box>
+                                                <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', letterSpacing: '0.1em' }}>
+                                                    Inquiries
+                                                </Typography>
+                                                <Typography sx={{ fontWeight: 600, overflowWrap: 'break-word' }}>{tournament.contactEmail}</Typography>
+                                            </Box>
+                                        </Box>
+                                    )}
+                                    {tournament.contactPhone && (
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                            <Box sx={{ bgcolor: 'rgba(255, 255, 255, 0.1)', p: 1, borderRadius: '8px' }}>
+                                                <PhoneIcon sx={{ color: '#10b981' }} />
+                                            </Box>
+                                            <Box>
+                                                <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', letterSpacing: '0.1em' }}>
+                                                    Phone
+                                                </Typography>
+                                                <Typography sx={{ fontWeight: 600 }}>{tournament.contactPhone}</Typography>
+                                            </Box>
+                                        </Box>
+                                    )}
+                                    {tournament.externalUrl && (
+                                        <>
+                                            <Button
+                                                variant="contained"
+                                                fullWidth
+                                                onClick={() => {
+                                                    setOpenLinkDialog(true);
+                                                    if (analytics) {
+                                                        logEvent(analytics, "external_link_clicked", {
+                                                            tournament_id: tournament.id,
+                                                            tournament_name: tournament.tournamentName,
+                                                            url: tournament.externalUrl
+                                                        });
+                                                    }
+                                                }}
+                                                sx={{
+                                                    bgcolor: '#10b981',
+                                                    py: 2,
+                                                    borderRadius: '12px',
+                                                    fontFamily: 'var(--font-bebas-neue)',
+                                                    fontSize: '1.2rem',
+                                                    letterSpacing: '0.05em',
+                                                    '&:hover': { bgcolor: '#059669' }
+                                                }}
+                                            >
+                                                Visit Tournament Website
+                                            </Button>
+
+                                            <LinkSafetyDialog
+                                                open={openLinkDialog}
+                                                onClose={() => setOpenLinkDialog(false)}
+                                                url={tournament.externalUrl}
+                                            />
+                                        </>
+                                    )}
+
+                                    <Button
+                                        variant="outlined"
+                                        fullWidth
+                                        href={`mailto:${tournament.contactEmail}`}
+                                        sx={{
+                                            color: 'white',
+                                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                                            py: 1.5,
+                                            borderRadius: '12px',
+                                            '&:hover': { borderColor: 'white', bgcolor: 'rgba(255, 255, 255, 0.05)' },
+                                            display: { xs: 'flex', md: 'none' }
+                                        }}
+                                    >
+                                        Email Organizer
+                                    </Button>
+                                </Box>
+                            </Paper>
+
+                            {/* Flyer Sidebar Placement */}
                             {tournament.flyerUrl && (
-                                <Box sx={{ mb: 6 }}>
+                                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
                                     <Typography
                                         variant="h4"
                                         sx={{
                                             fontFamily: 'var(--font-bebas-neue)',
                                             color: '#1e293b',
-                                            mb: 3,
-                                            letterSpacing: '0.02em'
+                                            mb: 2,
+                                            letterSpacing: '0.02em',
+                                            fontSize: '1.75rem'
                                         }}
                                     >
                                         Tournament Flyer
@@ -374,15 +532,14 @@ function TournamentViewContent() {
                                         onClick={() => setOpenFlyerModal(true)}
                                         sx={{
                                             cursor: 'pointer',
-                                            borderRadius: '16px',
+                                            borderRadius: '20px',
                                             overflow: 'hidden',
                                             border: '1px solid #e2e8f0',
                                             transition: 'transform 0.2s',
                                             '&:hover': {
-                                                transform: 'scale(1.01)',
+                                                transform: 'scale(1.02)',
                                                 boxShadow: '0 10px 30px -10px rgba(0,0,0,0.1)'
-                                            },
-                                            maxWidth: '500px'
+                                            }
                                         }}
                                     >
                                         <CardMedia
@@ -392,9 +549,9 @@ function TournamentViewContent() {
                                             sx={{
                                                 width: '100%',
                                                 height: 'auto',
-                                                maxHeight: '50vh',
+                                                maxHeight: '600px',
                                                 objectFit: 'contain',
-                                                bgcolor: '#f1f5f9' // Light background for letterboxing if aspect ratios differ
+                                                bgcolor: '#f1f5f9'
                                             }}
                                         />
                                         <Box sx={{ p: 1.5, textAlign: 'center', bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
@@ -442,161 +599,6 @@ function TournamentViewContent() {
                                     </Dialog>
                                 </Box>
                             )}
-                        </Paper>
-                    </Grid>
-
-                    {/* Sidebar */}
-                    <Grid size={{ xs: 12, md: 4 }}>
-                        <Box sx={{ position: 'sticky', top: 24 }}>
-                            <Paper
-                                elevation={0}
-                                sx={{
-                                    p: 4,
-                                    borderRadius: '24px',
-                                    bgcolor: '#1e293b',
-                                    color: 'white',
-                                    mb: 4,
-                                    border: '1px solid #334155'
-                                }}
-                            >
-                                <Typography
-                                    variant="h5"
-                                    sx={{
-                                        fontFamily: 'var(--font-bebas-neue)',
-                                        mb: 4,
-                                        letterSpacing: '0.05em'
-                                    }}
-                                >
-                                    Contact & Links
-                                </Typography>
-
-
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                                    {tournament.contactEmail && (
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                            <Box sx={{ bgcolor: 'rgba(255, 255, 255, 0.1)', p: 1, borderRadius: '8px' }}>
-                                                <EmailIcon sx={{ color: '#10b981' }} />
-                                            </Box>
-                                            <Box>
-                                                <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', letterSpacing: '0.1em' }}>
-                                                    Inquiries
-                                                </Typography>
-                                                <Typography sx={{ fontWeight: 600 }}>{tournament.contactEmail}</Typography>
-                                            </Box>
-                                        </Box>
-                                    )}
-                                    {tournament.externalUrl && (
-                                        <>
-                                            <Button
-                                                variant="contained"
-                                                fullWidth
-                                                onClick={() => setOpenLinkDialog(true)}
-                                                sx={{
-                                                    bgcolor: '#10b981',
-                                                    py: 2,
-                                                    borderRadius: '12px',
-                                                    fontFamily: 'var(--font-bebas-neue)',
-                                                    fontSize: '1.2rem',
-                                                    letterSpacing: '0.05em',
-                                                    '&:hover': { bgcolor: '#059669' }
-                                                }}
-                                            >
-                                                Visit Tournament Website
-                                            </Button>
-
-                                            <Dialog
-                                                open={openLinkDialog}
-                                                onClose={() => setOpenLinkDialog(false)}
-                                                PaperProps={{
-                                                    sx: { borderRadius: '20px', p: 1 }
-                                                }}
-                                            >
-                                                <DialogTitle sx={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: 1.5,
-                                                    fontFamily: 'var(--font-bebas-neue)',
-                                                    fontSize: '2rem',
-                                                    color: '#1e293b'
-                                                }}>
-                                                    <WarningAmberIcon color="warning" sx={{ fontSize: '2.5rem' }} />
-                                                    Safety Check
-                                                </DialogTitle>
-                                                <DialogContent>
-                                                    <DialogContentText sx={{ mb: 2, color: '#475569', fontSize: '1.1rem' }}>
-                                                        You are about to leave Golf Tourney Tracker and visit:
-                                                    </DialogContentText>
-                                                    <Box sx={{
-                                                        p: 2,
-                                                        bgcolor: '#f8fafc',
-                                                        borderRadius: '12px',
-                                                        border: '1px solid #e2e8f0',
-                                                        mb: 3,
-                                                        wordBreak: 'break-all'
-                                                    }}>
-                                                        <Typography sx={{ color: '#15803d', fontWeight: 600, fontFamily: 'monospace' }}>
-                                                            {tournament.externalUrl}
-                                                        </Typography>
-                                                    </Box>
-                                                    <Box sx={{
-                                                        p: 2,
-                                                        bgcolor: '#fff7ed',
-                                                        borderRadius: '12px',
-                                                        border: '1px solid #fed7aa',
-                                                        display: 'flex',
-                                                        gap: 2
-                                                    }}>
-                                                        <Typography sx={{ color: '#9a3412', fontSize: '0.95rem', fontWeight: 500 }}>
-                                                            <strong>Security Note:</strong> Always be wary of potential scams. Never share your password or sensitive financial details on a site you don't trust. Ensure the URL matches the official tournament provider.
-                                                        </Typography>
-                                                    </Box>
-                                                </DialogContent>
-                                                <DialogActions sx={{ p: 3, pt: 0 }}>
-                                                    <Button
-                                                        onClick={() => setOpenLinkDialog(false)}
-                                                        sx={{ color: '#64748b', fontWeight: 600 }}
-                                                    >
-                                                        Go Back
-                                                    </Button>
-                                                    <Button
-                                                        variant="contained"
-                                                        href={tournament.externalUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        onClick={() => setOpenLinkDialog(false)}
-                                                        sx={{
-                                                            bgcolor: '#15803d',
-                                                            px: 4,
-                                                            borderRadius: '10px',
-                                                            fontFamily: 'var(--font-bebas-neue)',
-                                                            fontSize: '1.1rem',
-                                                            '&:hover': { bgcolor: '#14532d' }
-                                                        }}
-                                                    >
-                                                        Continue to Website
-                                                    </Button>
-                                                </DialogActions>
-                                            </Dialog>
-                                        </>
-                                    )}
-
-                                    <Button
-                                        variant="outlined"
-                                        fullWidth
-                                        href={`mailto:${tournament.contactEmail}`}
-                                        sx={{
-                                            color: 'white',
-                                            borderColor: 'rgba(255, 255, 255, 0.2)',
-                                            py: 1.5,
-                                            borderRadius: '12px',
-                                            '&:hover': { borderColor: 'white', bgcolor: 'rgba(255, 255, 255, 0.05)' },
-                                            display: { xs: 'flex', md: 'none' }
-                                        }}
-                                    >
-                                        Email Organizer
-                                    </Button>
-                                </Box>
-                            </Paper>
                         </Box>
                     </Grid>
                 </Grid>

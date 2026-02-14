@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
+import { auth, db, analytics } from "@/lib/firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
+import { logEvent } from "firebase/analytics";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
@@ -30,6 +31,9 @@ export default function SignIn() {
         setError(""); // Clear previous errors
         try {
             await signInWithEmailAndPassword(auth, email, password);
+            if (analytics) {
+                logEvent(analytics, "auth_signin", { method: "email" });
+            }
             router.push("/");
         } catch (err: any) {
             setError(getAuthErrorMessage(err));
@@ -45,12 +49,17 @@ export default function SignIn() {
 
             // Check if user document exists in Firestore, if not create it
             const userDoc = await getDoc(doc(db, "users", user.uid));
-            if (!userDoc.exists()) {
+            const isNewUser = !userDoc.exists();
+            if (isNewUser) {
                 await setDoc(doc(db, "users", user.uid), {
                     userId: user.uid,
                     email: user.email,
                     createdAt: new Date().toISOString(),
                 });
+            }
+
+            if (analytics) {
+                logEvent(analytics, isNewUser ? "auth_signup" : "auth_signin", { method: "google" });
             }
 
             router.push("/");

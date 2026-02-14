@@ -12,6 +12,8 @@
     "deploy:rules": "firebase deploy --only firestore:rules",
     "deploy:rules:dev": "firebase use default && firebase deploy --only firestore:rules",
     "deploy:rules:prod": "firebase use production && firebase deploy --only firestore:rules",
+    "deploy:storage:dev": "firebase use default && firebase deploy --only storage",
+    "deploy:storage:prod": "firebase use production && firebase deploy --only storage",
     "deploy:indexes:dev": "firebase use default && firebase deploy --only firestore:indexes",
     "deploy:indexes:prod": "firebase use production && firebase deploy --only firestore:indexes",
     "start": "next start",
