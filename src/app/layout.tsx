@@ -28,6 +28,8 @@ export const metadata: Metadata = {
   description: "The easiest place to find and list local golf tournaments. Discover charity scrambles, amateur events, and competitive golf in Utah and Arizona.",
 };
 
+import Footer from "@/components/Footer";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -44,7 +46,12 @@ export default function RootLayout({
             <Suspense fallback={null}>
               <FirebaseAnalytics />
             </Suspense>
-            {children}
+            <div className="flex flex-col min-h-screen">
+              <main className="flex-grow flex flex-col bg-white">
+                {children}
+              </main>
+              <Footer />
+            </div>
           </AuthProvider>
         </ThemeRegistry>
       </body>

@@ -197,8 +197,8 @@ function HomeContent() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <Box>
+    <div className="bg-white flex-grow flex flex-col">
+      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         <Navbar />
 
 
@@ -286,7 +286,7 @@ function HomeContent() {
         </Box>
 
         {/* Tournament Discovery Section */}
-        <Box sx={{ bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0', py: 8 }}>
+        <Box sx={{ bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0', py: 8, flexGrow: 1 }}>
           <Container maxWidth="lg" sx={{ px: { xs: 3, sm: 4, md: 4 } }}>
             <Typography
               variant="h4"
@@ -537,39 +537,6 @@ function HomeContent() {
             )}
           </Container>
         </Box>
-      </Box>
-
-      {/* Footer / About Link */}
-      <Box sx={{ bgcolor: '#1e293b', mt: 16, py: 4, color: 'white', borderTop: '1px solid rgba(255,255,255,0.1)', flexGrow: 1 }}>
-
-        <Container maxWidth="lg" sx={{ textAlign: 'center', display: 'flex', justifyContent: 'center', gap: 2 }}>
-          <Button
-            component={Link}
-            href="/about"
-            sx={{
-              color: 'rgba(255,255,255,0.7)',
-              fontFamily: 'var(--font-bebas-neue)',
-              fontSize: '1.2rem',
-              letterSpacing: '0.05em',
-              '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.05)' }
-            }}
-          >
-            About
-          </Button>
-          <Button
-            component={Link}
-            href="/contact"
-            sx={{
-              color: 'rgba(255,255,255,0.7)',
-              fontFamily: 'var(--font-bebas-neue)',
-              fontSize: '1.2rem',
-              letterSpacing: '0.05em',
-              '&:hover': { color: 'white', bgcolor: 'rgba(255,255,255,0.05)' }
-            }}
-          >
-            Contact Us
-          </Button>
-        </Container>
       </Box>
     </div>
   );

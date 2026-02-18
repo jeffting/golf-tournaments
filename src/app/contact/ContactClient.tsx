@@ -11,7 +11,7 @@ import LightbulbIcon from '@mui/icons-material/Lightbulb';
 
 export default function ContactClient() {
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="flex-grow flex flex-col bg-slate-50">
             <Navbar />
 
             <Container maxWidth="md" sx={{ pb: 12, mt: 8 }}>

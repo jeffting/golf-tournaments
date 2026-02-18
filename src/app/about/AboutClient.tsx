@@ -14,7 +14,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 
 export default function AboutClient() {
     return (
-        <div className="min-h-screen bg-slate-50">
+        <div className="flex-grow flex flex-col bg-slate-50">
             <Navbar />
 
             {/* Hero Section */}
