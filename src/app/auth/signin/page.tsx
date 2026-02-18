@@ -59,7 +59,7 @@ export default function SignIn() {
             }
 
             if (analytics) {
-                logEvent(analytics, isNewUser ? "auth_signup" : "auth_signin", { method: "google" });
+                logEvent(analytics, isNewUser ? "account_created" : "auth_signin", { method: "google" });
             }
 
             router.push("/");

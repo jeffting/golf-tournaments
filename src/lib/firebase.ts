@@ -20,7 +20,18 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// Analytics can only exist in browser environment
-export const analytics = typeof window !== "undefined" ? getAnalytics(app) : null;
+// Analytics instance
+let analyticsInstance: any = null;
+
+// Initialize analytics only on the client and if supported
+if (typeof window !== "undefined") {
+    isSupported().then((supported) => {
+        if (supported) {
+            analyticsInstance = getAnalytics(app);
+        }
+    });
+}
+
+export const analytics = analyticsInstance;
 
 export { app, db, auth, storage };

@@ -61,7 +61,7 @@ export default function SignUp() {
             });
 
             if (analytics) {
-                logEvent(analytics, "auth_signup", { method: "email" });
+                logEvent(analytics, "account_created", { method: "email" });
             }
 
             router.push("/");
