@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
@@ -8,8 +9,23 @@ import Paper from "@mui/material/Paper";
 import EmailIcon from '@mui/icons-material/Email';
 import BugReportIcon from '@mui/icons-material/BugReport';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CheckIcon from '@mui/icons-material/Check';
+import { Tooltip } from "@mui/material";
 
 export default function ContactClient() {
+    const [copied, setCopied] = useState(false);
+    const email = "golftourneytrackerservice@gmail.com";
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(email);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error("Failed to copy!", err);
+        }
+    };
     return (
         <div className="flex-grow flex flex-col bg-slate-50">
             <Navbar />
@@ -33,32 +49,40 @@ export default function ContactClient() {
                         The best way to reach us is via email at:
                     </Typography>
 
-                    <Box
-                        component="a"
-                        href="mailto:golftourneytrackerservice@gmail.com"
-                        sx={{
-                            display: 'inline-block',
-                            fontSize: { xs: '1.1rem', md: '2rem' },
-                            fontWeight: 700,
-                            color: '#15803d',
-                            textDecoration: 'none',
-                            bgcolor: '#f0fdf4',
-                            px: 4,
-                            py: 2,
-                            borderRadius: '16px',
-                            border: '2px solid #dcfce7',
-                            transition: 'all 0.2s',
-                            '&:hover': {
-                                transform: 'translateY(-2px)',
-                                boxShadow: '0 4px 12px rgba(21, 128, 61, 0.1)',
-                                bgcolor: '#dcfce7'
-                            },
-                            mb: 8,
-                            wordBreak: 'break-all'
-                        }}
-                    >
-                        golftourneytrackerservice@gmail.com
-                    </Box>
+                    <Tooltip title={copied ? "Copied!" : "Click to copy"} arrow>
+                        <Box
+                            onClick={handleCopy}
+                            sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 2,
+                                fontWeight: 700,
+                                color: copied ? '#059669' : '#15803d',
+                                cursor: 'pointer',
+                                bgcolor: copied ? '#ecfdf5' : '#f0fdf4',
+                                px: 4,
+                                py: 2,
+                                borderRadius: '16px',
+                                border: '2px solid',
+                                borderColor: copied ? '#10b981' : '#dcfce7',
+                                transition: 'all 0.2s',
+                                '&:hover': {
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: '0 4px 12px rgba(21, 128, 61, 0.1)',
+                                    bgcolor: copied ? '#ecfdf5' : '#dcfce7'
+                                },
+                                mb: 8,
+                                whiteSpace: 'nowrap',
+                                maxWidth: '100%',
+                                fontSize: { xs: '0.7rem', sm: '1rem', md: '1.5rem' },
+                            }}
+                        >
+                            <Box component="span" sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {email}
+                            </Box>
+                            {copied ? <CheckIcon fontSize="large" sx={{ flexShrink: 0 }} /> : <ContentCopyIcon fontSize="large" sx={{ flexShrink: 0 }} />}
+                        </Box>
+                    </Tooltip>
 
                     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4, textAlign: 'left' }}>
                         <Box sx={{ p: 3, bgcolor: '#f8fafc', borderRadius: '20px', border: '1px solid #e2e8f0' }}>
