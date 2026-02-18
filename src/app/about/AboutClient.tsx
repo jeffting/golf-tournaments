@@ -36,10 +36,7 @@ export default function AboutClient() {
                             lineHeight: 0.9
                         }}
                     >
-                        Connecting Golfers <br /> with Local Tournaments
-                    </Typography>
-                    <Typography variant="h5" sx={{ maxWidth: '800px', opacity: 0.9, lineHeight: 1.6 }}>
-                        Anyone can list a tournament for free. This is the easiest way to find and list local golf events. From charity scrambles to competitive stroke play, find your next tee time here.
+                        One centralized place for golfers to find and list golf tournaments. ALL FOR FREE.
                     </Typography>
                 </Container>
             </Box>
@@ -61,10 +58,13 @@ export default function AboutClient() {
                             Our Mission
                         </Typography>
                         <Typography paragraph sx={{ fontSize: '1.1rem', color: '#475569', mb: 3 }}>
-                            Golf Tourney Tracker was built to solve a simple problem: finding local golf tournaments shouldn't be hard. Whether you're a tournament director trying to fill your field or a player looking for a weekend scramble, we provide a centralized hub for the local golf community.
+                            Golf Tourney Tracker was built to solve a simple problem: <b>finding local golf tournaments shouldn't be hard.</b> No more searching facebook pages, calling courses, and pilforing through the local newspaper.
+                            This page is intended to be the one stop shop for finding and listing local golf tournaments.
+
                         </Typography>
                         <Typography paragraph sx={{ fontSize: '1.1rem', color: '#475569' }}>
                             We currently focus on the vibrant golf scenes in <strong>Utah</strong> and <strong>Arizona</strong>, bringing visibility to events that might otherwise get lost in email chains and clubhouse flyers.
+                            If you want Golf Tourney Tracker in your state, send me an email! <b>golftourneytrackerservice@gmail.com</b>.
                         </Typography>
                     </Grid>
                     <Grid size={{ xs: 12, md: 6 }}>
@@ -74,7 +74,7 @@ export default function AboutClient() {
                                 <Box>
                                     <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>For Players</Typography>
                                     <Typography color="text.secondary">
-                                        Discover new courses and competitive opportunities. Filter by date, location, and format to find the perfect event for your foursome.
+                                        Save time searching for tournaments and find more opportunities to swing the club in local golf tournaments.
                                     </Typography>
                                 </Box>
                             </Box>
@@ -84,6 +84,7 @@ export default function AboutClient() {
                                     <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>For Directors</Typography>
                                     <Typography color="text.secondary">
                                         List your tournament for free. Reach a targeted audience of local golfers and fill your spots faster with a professional event listing.
+                                        Listing will always be free.
                                     </Typography>
                                 </Box>
                             </Box>
@@ -113,7 +114,7 @@ export default function AboutClient() {
                                 </Box>
                                 <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>Competitive & Fun</Typography>
                                 <Typography color="text.secondary">
-                                    From high-stakes championships to fun charity scrambles, we host a wide variety of formats for every skill level.
+                                    From high-stakes championships to fun charity scrambles, find a wide variety of formats for every skill level.
                                 </Typography>
                             </Paper>
                         </Grid>
@@ -124,7 +125,7 @@ export default function AboutClient() {
                                 </Box>
                                 <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>Top Courses</Typography>
                                 <Typography color="text.secondary">
-                                    Find events hosted at some of the best public and private courses across the country.
+                                    Find events hosted at some of the best public and private courses.
                                 </Typography>
                             </Paper>
                         </Grid>
