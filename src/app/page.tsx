@@ -17,13 +17,19 @@ import PublicIcon from '@mui/icons-material/Public';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import ClearAllIcon from '@mui/icons-material/ClearAll';
 import { Collapse, Grid, Select, FormControl, InputLabel, Chip, Stack, Paper } from "@mui/material";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { Suspense } from "react";
 import { useMemo } from "react";
 import Link from "next/link";
 import AddIcon from '@mui/icons-material/Add';
 import GolfCourseIcon from '@mui/icons-material/GolfCourse';
 import GroupsIcon from '@mui/icons-material/Groups';
 
-export default function Home() {
+function HomeContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedState, setSelectedState] = useState<string>("");
@@ -56,8 +62,9 @@ export default function Home() {
     }
   }, []);
 
-  // Load filters from localStorage on mount
+  // Load filters from URL and localStorage on mount
   useEffect(() => {
+    const urlState = searchParams.get("state");
     const cachedState = localStorage.getItem("selectedGolfState");
     const cachedCities = localStorage.getItem("golfFilterCities");
     const cachedCourses = localStorage.getItem("golfFilterCourses");
@@ -65,9 +72,25 @@ export default function Home() {
     const cachedEnd = localStorage.getItem("golfFilterEnd");
     const cachedShowFilters = localStorage.getItem("golfShowFilters");
 
-    const finalState = (cachedState === "UT" || cachedState === "AZ") ? cachedState : "AZ";
+    // Order of precedence: URL > localStorage > Default (None)
+    let finalState = "";
+    if (urlState === "UT" || urlState === "AZ") {
+      finalState = urlState;
+    } else if (cachedState === "UT" || cachedState === "AZ") {
+      finalState = cachedState;
+    }
+
     setSelectedState(finalState);
-    fetchTournaments(finalState);
+    if (finalState) {
+      fetchTournaments(finalState);
+    }
+
+    // Update URL if it doesn't match the final state and we have a state
+    if (finalState && urlState !== finalState) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("state", finalState);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
 
     // Handle migration from old single-string format to array
     if (cachedCities) {
@@ -108,6 +131,12 @@ export default function Home() {
   const handleStateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newState = e.target.value;
     setSelectedState(newState);
+
+    // Update URL query parameter
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("state", newState);
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+
     // Reset filters when state changes
     setFilterCities([]);
     setFilterCourses([]);
@@ -543,5 +572,17 @@ export default function Home() {
         </Container>
       </Box>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-800"></div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
