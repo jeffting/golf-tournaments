@@ -108,7 +108,7 @@ export default function Navbar() {
                         <Box sx={{ flexGrow: 0 }}>
                             <Tooltip title={user.email || "Settings"}>
                                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                                    <Avatar alt={user.email || "User"} src="/static/images/avatar/2.jpg" sx={{ bgcolor: 'white', color: '#14532d' }}>
+                                    <Avatar alt={user.email || "User"} sx={{ bgcolor: 'white', color: '#14532d' }}>
                                         {(user.email || "U").charAt(0).toUpperCase()}
                                     </Avatar>
                                 </IconButton>

@@ -175,6 +175,26 @@ function HomeContent() {
     });
   }, [tournaments, filterCities, filterCourses, filterStartDate, filterEndDate]);
 
+  const groupedTournaments = useMemo(() => {
+    const groups: { monthYear: string; tournaments: Tournament[] }[] = [];
+
+    filteredTournaments.forEach(t => {
+      // Use YYYY-MM-DD split to avoid timezone shifts
+      const [year, month, day] = t.date.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
+      const monthYear = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+      const lastGroup = groups[groups.length - 1];
+      if (lastGroup && lastGroup.monthYear === monthYear) {
+        lastGroup.tournaments.push(t);
+      } else {
+        groups.push({ monthYear, tournaments: [t] });
+      }
+    });
+
+    return groups;
+  }, [filteredTournaments]);
+
   const clearFilters = () => {
     setFilterCities([]);
     setFilterCourses([]);
@@ -529,11 +549,41 @@ function HomeContent() {
                 )}
               </Box>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                {filteredTournaments.map((tournament) => (
-                  <TournamentCard key={tournament.id} tournament={tournament} />
+              <Box className="animate-in fade-in slide-in-from-bottom-4 duration-700" sx={{ mx: { xs: -3, sm: -4 }, px: { xs: 3, sm: 4 } }}>
+                {groupedTournaments.map((group, index) => (
+                  <Box
+                    key={group.monthYear}
+                    sx={{
+                      bgcolor: index % 2 === 0 ? 'transparent' : 'rgba(21, 128, 60, 0.1)',
+                      py: 6,
+                      px: { xs: 3, sm: 4 },
+                      mx: { xs: -3, sm: -4 },
+                    }}
+                  >
+                    <Container maxWidth="lg" sx={{ p: '0 !important' }}>
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          fontFamily: 'var(--font-bebas-neue)',
+                          color: '#15803d',
+                          mb: 4,
+                          pb: 1,
+                          borderBottom: '2px solid #e2e8f0',
+                          display: 'inline-block',
+                          letterSpacing: '0.05em'
+                        }}
+                      >
+                        {group.monthYear}
+                      </Typography>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                        {group.tournaments.map((tournament) => (
+                          <TournamentCard key={tournament.id} tournament={tournament} />
+                        ))}
+                      </div>
+                    </Container>
+                  </Box>
                 ))}
-              </div>
+              </Box>
             )}
           </Container>
         </Box>

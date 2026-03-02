@@ -31,7 +31,7 @@ service cloud.firestore {
         && (
       (data.get('contactEmail', null) != null && isValidString(data.contactEmail, 5, 50)) ||
       (data.get('contactPhone', null) != null && isValidString(data.contactPhone, 10, 20)) ||
-      (data.get('externalUrl', null) != null && isValidString(data.externalUrl, 3, 300))
+      (data.get('externalUrl', null) != null && isValidString(data.externalUrl, 3, 800))
       )
         && isValidString(data.description, 5, 4000)
         && isValidTime(data.startTime)

@@ -50,9 +50,9 @@ export const validateTournament = (data: any): ValidationResult => {
         }
     }
 
-    // External URL (max 300 if provided)
-    if (data.externalUrl && data.externalUrl.length > 300) {
-        return { isValid: false, error: "Tournament Website URL must be at most 300 characters." };
+    // External URL (max 800 if provided)
+    if (data.externalUrl && data.externalUrl.length > 800) {
+        return { isValid: false, error: "Tournament Website URL must be at most 800 characters." };
     }
 
     // Description (5-4000)
