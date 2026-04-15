@@ -1,3 +1,5 @@
+import { logAppError } from "./errorLogger";
+
 export const getAuthErrorMessage = (error: any): string => {
     const code = error?.code || error?.message || "";
 
@@ -39,7 +41,7 @@ export const getAuthErrorMessage = (error: any): string => {
             return "The sign-in popup was blocked by your browser. Please allow popups for this site.";
 
         default:
-            console.error("Unhandled Auth Error:", error);
+            logAppError("Unhandled Auth Error", error);
             // Include code in the user message if possible to help with debugging
             return `An unexpected error occurred (${code}). Please try again.`;
     }

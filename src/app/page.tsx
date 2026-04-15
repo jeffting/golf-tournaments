@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, query, orderBy, where } from "firebase/firestore";
+import { logAppError } from "@/lib/errorLogger";
 import { Tournament } from "@/types/tournament";
 import TournamentCard from "@/components/TournamentCard";
 import Navbar from "@/components/Navbar";
@@ -56,7 +57,7 @@ function HomeContent() {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Tournament);
       setTournaments(data);
     } catch (e) {
-      console.error("Error fetching tournaments:", e);
+      logAppError("Error fetching tournaments", e);
     } finally {
       setLoading(false);
     }

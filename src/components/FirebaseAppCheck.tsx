@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import { app } from '@/lib/firebase';
+import { logAppError } from '@/lib/errorLogger';
 
 export default function FirebaseAppCheck() {
     useEffect(() => {
@@ -24,7 +25,7 @@ export default function FirebaseAppCheck() {
                     });
                     console.log('Firebase App Check initialized with reCAPTCHA v3');
                 } catch (error) {
-                    console.error('Firebase App Check initialization failed:', error);
+                    logAppError('Firebase App Check initialization failed', error);
                 }
             } else if (process.env.NODE_ENV === 'production') {
                 console.warn('Firebase App Check: NEXT_PUBLIC_RECAPTCHA_SITE_KEY is missing in production.');

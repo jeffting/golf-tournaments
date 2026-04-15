@@ -10,6 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Typography, Box as MuiBox, CardMedia } from "@mui/material";
 import { Tournament } from "@/types/tournament";
 import { validateTournament } from "@/lib/validation";
+import { logAppError } from "@/lib/errorLogger";
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DeleteIcon from '@mui/icons-material/Delete';
 
@@ -256,7 +257,7 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                 router.push("/");
             }
         } catch (err: any) {
-            console.error("Error saving tournament:", err);
+            logAppError("Error saving tournament", err);
             setError(err.message || "Failed to save tournament. Please try again.");
         } finally {
             setLoading(false);

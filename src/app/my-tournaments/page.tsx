@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Tournament } from "@/types/tournament";
 import { Container, Typography, Grid, Box, CircularProgress, Button } from "@mui/material";
 import Link from 'next/link';
+import { logAppError } from "@/lib/errorLogger";
 
 export default function MyTournamentsPage() {
     const { user } = useAuth();
@@ -41,7 +42,7 @@ export default function MyTournamentsPage() {
 
                 setTournaments(tournamentData);
             } catch (error) {
-                console.error("Error fetching tournaments:", error);
+                logAppError("Error fetching tournaments", error);
             } finally {
                 setLoading(false);
             }
