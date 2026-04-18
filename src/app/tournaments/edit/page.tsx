@@ -9,6 +9,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import Link from "next/link";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { logAppError } from "@/lib/errorLogger";
 import { Tournament } from "@/types/tournament";
 
 export default function EditTournamentPage() {
@@ -44,7 +45,7 @@ export default function EditTournamentPage() {
                         console.log("No such document!");
                     }
                 } catch (e) {
-                    console.error("Error fetching tournament:", e);
+                    logAppError("Error fetching tournament", e);
                 } finally {
                     setLoading(false);
                 }

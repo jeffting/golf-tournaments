@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { collection, addDoc, runTransaction, doc, updateDoc, getDoc } from "firebase/firestore";
-import { db, auth, storage, analytics } from "@/lib/firebase";
+import { db, auth, storage, getAppAnalytics } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { logEvent } from "firebase/analytics";
 import { useAuth } from "@/context/AuthContext";
@@ -176,17 +176,19 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
         }
 
         try {
+            const appAnalytics = await getAppAnalytics();
             let flyerUrl = initialData?.flyerUrl || "";
 
             // Upload flyer if a new one was selected
             if (flyerFile) {
                 const compressedBlob = await compressImage(flyerFile);
                 // Use user.uid in path for security rules compatibility
-                const storageRef = ref(storage, `flyers / ${user.uid}/${tournamentId || Date.now()}-${flyerFile.name}`);
-                const snapshot = await uploadBytes(storageRef, compressedBlob);
+                const storageRef = ref(storage, `flyers/${user.uid}/${tournamentId || Date.now()}-${flyerFile.name}`);
+                const metadata = { contentType: flyerFile.type || 'image/jpeg' };
+                const snapshot = await uploadBytes(storageRef, compressedBlob, metadata);
                 flyerUrl = await getDownloadURL(snapshot.ref);
-                if (analytics) {
-                    logEvent(analytics, "flyer_uploaded", {
+                if (appAnalytics) {
+                    logEvent(appAnalytics, "flyer_uploaded", {
                         file_name: flyerFile.name,
                         file_size: flyerFile.size
                     });
@@ -205,8 +207,8 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                         longitude: initialData?.location.longitude || 0,
                     }
                 });
-                if (analytics) {
-                    logEvent(analytics, "tournament_edited", {
+                if (appAnalytics) {
+                    logEvent(appAnalytics, "tournament_edited", {
                         tournament_id: tournamentId,
                         tournament_name: formData.tournamentName
                     });
@@ -248,8 +250,8 @@ export default function TournamentForm({ initialData, isEditing, tournamentId }:
                         }
                     });
                 });
-                if (analytics) {
-                    logEvent(analytics, "tournament_created", {
+                if (appAnalytics) {
+                    logEvent(appAnalytics, "tournament_created", {
                         tournament_name: formData.tournamentName,
                         state: formData.location.state
                     });

@@ -20,18 +20,18 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 const storage = getStorage(app);
 
-// Analytics instance
-let analyticsInstance: any = null;
-
-// Initialize analytics only on the client and if supported
-if (typeof window !== "undefined") {
-    isSupported().then((supported) => {
+// Helper to get analytics safely
+export const getAppAnalytics = async () => {
+    if (typeof window !== "undefined") {
+        const supported = await isSupported();
         if (supported) {
-            analyticsInstance = getAnalytics(app);
+            return getAnalytics(app);
         }
-    });
-}
+    }
+    return null;
+};
 
-export const analytics = analyticsInstance;
+// Kept for backwards compatibility but it will be null initially
+export const analytics = null;
 
 export { app, db, auth, storage };

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createUserWithEmailAndPassword, updateProfile, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
-import { auth, db, analytics } from "@/lib/firebase";
+import { auth, db, getAppAnalytics } from "@/lib/firebase";
 import { logEvent } from "firebase/analytics";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -60,8 +60,9 @@ export default function SignUp() {
                 createdAt: new Date().toISOString(),
             });
 
-            if (analytics) {
-                logEvent(analytics, "account_created", { method: "email" });
+            const appAnalytics = await getAppAnalytics();
+            if (appAnalytics) {
+                logEvent(appAnalytics, "account_created", { method: "email" });
             }
 
             router.push("/");
@@ -87,8 +88,9 @@ export default function SignUp() {
                 });
             }
 
-            if (analytics) {
-                logEvent(analytics, isNewUser ? "auth_signup" : "auth_signin", { method: "google" });
+            const appAnalytics = await getAppAnalytics();
+            if (appAnalytics) {
+                logEvent(appAnalytics, isNewUser ? "auth_signup" : "auth_signin", { method: "google" });
             }
 
             router.push("/");

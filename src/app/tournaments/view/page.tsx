@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { db, auth, analytics } from "@/lib/firebase";
+import { db, auth, getAppAnalytics } from "@/lib/firebase";
 import { doc, getDoc, deleteDoc } from "firebase/firestore";
 import { logEvent } from "firebase/analytics";
+import { logAppError } from "@/lib/errorLogger";
 import { Tournament } from "@/types/tournament";
 import Navbar from "@/components/Navbar";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -55,7 +56,7 @@ function TournamentViewContent() {
                     console.log("No such document!");
                 }
             } catch (e) {
-                console.error("Error fetching tournament:", e);
+                logAppError("Error fetching tournament", e);
             } finally {
                 setLoading(false);
             }
@@ -72,7 +73,7 @@ function TournamentViewContent() {
             await deleteDoc(doc(db, "tournaments", id));
             router.push("/");
         } catch (error) {
-            console.error("Error deleting tournament:", error);
+            logAppError("Error deleting tournament", error);
             alert("Failed to delete tournament.");
         }
     };
@@ -464,10 +465,11 @@ function TournamentViewContent() {
                                             <Button
                                                 variant="contained"
                                                 fullWidth
-                                                onClick={() => {
+                                                onClick={async () => {
                                                     setOpenLinkDialog(true);
-                                                    if (analytics) {
-                                                        logEvent(analytics, "external_link_clicked", {
+                                                    const appAnalytics = await getAppAnalytics();
+                                                    if (appAnalytics) {
+                                                        logEvent(appAnalytics, "external_link_clicked", {
                                                             tournament_id: tournament.id,
                                                             tournament_name: tournament.tournamentName,
                                                             url: tournament.externalUrl

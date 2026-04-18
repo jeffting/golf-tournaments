@@ -13,6 +13,8 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import { Tooltip } from "@mui/material";
 
+import { logAppError } from "@/lib/errorLogger";
+
 export default function ContactClient() {
     const [copied, setCopied] = useState(false);
     const email = "golftourneytrackerservice@gmail.com";
@@ -23,7 +25,7 @@ export default function ContactClient() {
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch (err) {
-            console.error("Failed to copy!", err);
+            logAppError("Failed to copy email", err);
         }
     };
     return (

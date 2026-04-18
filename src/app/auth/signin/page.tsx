@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth, db, analytics } from "@/lib/firebase";
+import { auth, db, getAppAnalytics } from "@/lib/firebase";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { logEvent } from "firebase/analytics";
 import { useRouter } from "next/navigation";
@@ -31,8 +31,9 @@ export default function SignIn() {
         setError(""); // Clear previous errors
         try {
             await signInWithEmailAndPassword(auth, email, password);
-            if (analytics) {
-                logEvent(analytics, "auth_signin", { method: "email" });
+            const appAnalytics = await getAppAnalytics();
+            if (appAnalytics) {
+                logEvent(appAnalytics, "auth_signin", { method: "email" });
             }
             router.push("/");
         } catch (err: any) {
@@ -58,8 +59,9 @@ export default function SignIn() {
                 });
             }
 
-            if (analytics) {
-                logEvent(analytics, isNewUser ? "account_created" : "auth_signin", { method: "google" });
+            const appAnalytics = await getAppAnalytics();
+            if (appAnalytics) {
+                logEvent(appAnalytics, isNewUser ? "account_created" : "auth_signin", { method: "google" });
             }
 
             router.push("/");

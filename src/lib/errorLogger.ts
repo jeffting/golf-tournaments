@@ -1,5 +1,5 @@
-import { analytics } from "./firebase";
-import { logEvent } from "firebase/analytics";
+import { app } from "./firebase";
+import { logEvent, getAnalytics, isSupported } from "firebase/analytics";
 
 /**
  * Logs an error both to the console and to Firebase Analytics.
@@ -17,11 +17,18 @@ export function logAppError(message: string, error?: any, context?: Record<strin
 
     // 2. Send to Firebase Analytics if available
     try {
-        if (analytics) {
-            logEvent(analytics, "exception", {
-                description: `${message}${error ? `: ${error.message || error}` : ""}`,
-                fatal: false, // You can make this true for critical crashes
-                ...context
+        if (typeof window !== "undefined") {
+            isSupported().then((supported) => {
+                if (supported) {
+                    const analytics = getAnalytics(app);
+                    logEvent(analytics, "exception", {
+                        description: `${message}${error ? `: ${error.message || error}` : ""}`,
+                        fatal: false, // You can make this true for critical crashes
+                        ...context
+                    });
+                }
+            }).catch(() => {
+                // Ignore analytics errors
             });
         }
     } catch (e) {
